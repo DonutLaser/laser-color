@@ -1,0 +1,1 @@
+msbuild vs\laserColor\laserColor.sln /nologo /v:m /p:OutDir=..\..\build\
