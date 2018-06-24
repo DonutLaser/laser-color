@@ -1,5 +1,6 @@
 #include <windows.h>
 #include <stdio.h>
+#include <gl/gl.h>
 
 #include "lc_platform.h"
 
@@ -155,7 +156,6 @@ static LRESULT CALLBACK window_proc (HWND window, UINT msg, WPARAM wParam, LPARA
 	return DefWindowProc (window, msg, wParam, lParam);
 }
 
-
 int CALLBACK WinMain (HINSTANCE hInstance, HINSTANCE prevInstance,
 					  LPSTR cmdLine, int cmdShow) {
 
@@ -183,6 +183,31 @@ int CALLBACK WinMain (HINSTANCE hInstance, HINSTANCE prevInstance,
 									hInstance, 
 									0);
 
+		HDC device_context = GetDC (window);
+		PIXELFORMATDESCRIPTOR format = { };
+		format.nSize = sizeof (format);
+		format.nVersion = 1;
+		format.dwFlags = PFD_SUPPORT_OPENGL | PFD_DRAW_TO_WINDOW | PFD_DOUBLEBUFFER;
+		format.cColorBits = 32;
+		format.cAlphaBits = 8;
+		format.iLayerType = PFD_MAIN_PLANE;
+
+		int format_index = ChoosePixelFormat (device_context, &format);
+		PIXELFORMATDESCRIPTOR suggested_format;
+		DescribePixelFormat (device_context, format_index, 
+							 sizeof (suggested_format), &suggested_format);
+		SetPixelFormat (device_context, format_index, &suggested_format);
+
+		HGLRC gl_context = wglCreateContext (device_context);
+		if (wglMakeCurrent (device_context, gl_context))
+			platform_log ("Initialized OpenGL rendering context.\n");
+		else {
+			platform_log ("Wasn't able to initialize OpenGL rendering context.\n");
+			return 1;
+		}
+
+		ReleaseDC (window, device_context);
+
 		if (window) {
 			ShowWindow (window, cmdShow);
 
@@ -196,6 +221,11 @@ int CALLBACK WinMain (HINSTANCE hInstance, HINSTANCE prevInstance,
 
 				TranslateMessage (&msg);
 				DispatchMessage (&msg);
+
+				glViewport (0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
+				glClearColor (1.0f, 0.0f, 1.0f, 0.0f);
+				glClear (GL_COLOR_BUFFER_BIT);
+				SwapBuffers (device_context);
 			}
 		}
 		else
