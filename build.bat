@@ -1,1 +1,1 @@
-msbuild vs\laserColor\laserColor.sln /nologo /v:m /p:OutDir=..\..\build\
+msbuild vs\LaserColor\LaserColor.sln /nologo /v:m /p:OutDir=..\..\..\build\

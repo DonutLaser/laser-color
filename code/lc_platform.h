@@ -1,0 +1,38 @@
+#if !defined (LC_PLATFORM_H)
+#define LC_PLATFORM_H
+
+enum write_mode { WM_OVERWRITE, WM_APPEND };
+
+// Setting up the function pointers
+#define OPEN_FILE(name) void* name(const char* file_name)
+typedef OPEN_FILE(open_file);
+
+#define WRITE_FILE(name) bool name(void* file_handle, const char* text, int size, write_mode mode)
+typedef WRITE_FILE(write_file);
+
+#define READ_FILE(name) bool name(void* file_handle, char** text)
+typedef READ_FILE(read_file);
+
+#define CLOSE_FILE(name) void name(void* file_handle)
+typedef CLOSE_FILE(close_file);
+// Perhaps log shouldn't be specific to a platform?
+#define LOG(name) void name(const char* format, ...)
+typedef LOG(log);
+
+struct platform_api {
+	open_file* 	open_file;
+	write_file* write_file;	
+	read_file*	read_file;
+	close_file* close_file;
+	log*		log;
+};
+
+// enum render_type { RT_RECT, RT_TEXT };
+struct platform_render_queue {
+	void* entries[128];
+	int count;
+};
+
+void platform_push_to_render_queue (platform_render_queue* queue, void* entry);
+
+#endif
