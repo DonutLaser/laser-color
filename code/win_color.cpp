@@ -175,8 +175,7 @@ int CALLBACK WinMain (HINSTANCE hInstance, HINSTANCE prevInstance,
 		platform_log ("Creating a window of size %dx%d\n", WINDOW_WIDTH, WINDOW_HEIGHT);
 		HWND window = CreateWindow ("Laser Color", "Laser Color",
 									WS_OVERLAPPED | WS_CAPTION | 
-										WS_SYSMENU | WS_MINIMIZEBOX | 
-										WS_MAXIMIZEBOX,
+										WS_SYSMENU | WS_MINIMIZEBOX,
 									CW_USEDEFAULT, CW_USEDEFAULT,
 									WINDOW_WIDTH, WINDOW_HEIGHT,
 									0, 0,
