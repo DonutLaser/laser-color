@@ -202,7 +202,7 @@ int CALLBACK WinMain (HINSTANCE hInstance, HINSTANCE prevInstance,
 		if (wglMakeCurrent (device_context, gl_context))
 			platform_log ("Initialized OpenGL rendering context.\n");
 		else {
-			platform_log ("Wasn't able to initialize OpenGL rendering context.\n");
+			platform_log ("Wasn't able to initialize OpenGL rendering context.Exiting...\n");
 			return 1;
 		}
 
