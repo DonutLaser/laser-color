@@ -27,12 +27,4 @@ struct platform_api {
 	log*		log;
 };
 
-// enum render_type { RT_RECT, RT_TEXT };
-struct platform_render_queue {
-	void* entries[128];
-	int count;
-};
-
-void platform_push_to_render_queue (platform_render_queue* queue, void* entry);
-
 #endif

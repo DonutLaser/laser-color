@@ -3,9 +3,16 @@
 #include <gl/gl.h>
 
 #include "lc_platform.h"
+#include "lc.h"
+#include "lc_memory.h"
+#include "lc_opengl.h"
 
 #define WINDOW_HEIGHT 256 
 #define WINDOW_WIDTH  320
+
+#define Kilobytes(x) ((x * 1024))
+#define Megabytes(x) ((Kilobytes(x) * 1024))
+#define Gigabytes(x) ((Megabytes(x) * 1024))
 
 // Get rid of these globals someday 
 static HANDLE global_log_file;
@@ -91,58 +98,33 @@ static void platform_log (const char* format, ...) {
 // 	return new_rect;
 // }
 
-static void remove_file_name_from_path (char* path, DWORD size) {
-	for (int i = size; i > 0; --i) {
-		if (path[i] == '/' || path[i] == '\\') {
-			path[i + 1] = '\0';
-			return;
-		}
+static bool initialize_open_gl (HWND window) {
+	HDC device_context = GetDC (window);
+	PIXELFORMATDESCRIPTOR format = { };
+	format.nSize = sizeof (format);
+	format.nVersion = 1;
+	format.dwFlags = PFD_SUPPORT_OPENGL | PFD_DRAW_TO_WINDOW | PFD_DOUBLEBUFFER;
+	format.cColorBits = 32;
+	format.cAlphaBits = 8;
+	format.iLayerType = PFD_MAIN_PLANE;
+
+	int format_index = ChoosePixelFormat (device_context, &format);
+	PIXELFORMATDESCRIPTOR suggested_format;
+	DescribePixelFormat (device_context, format_index, 
+						 sizeof (suggested_format), &suggested_format);
+	SetPixelFormat (device_context, format_index, &suggested_format);
+
+	HGLRC gl_context = wglCreateContext (device_context);
+	if (!wglMakeCurrent (device_context, gl_context)) {
+		platform_log ("Wasn't able to initialize OpenGL rendering context.Exiting...\n");
+		return false;
 	}
-}
 
-// static void render (HWND window, platform_render_queue* queue) {
-// 	PAINTSTRUCT paint_info;
-// 	HDC context = BeginPaint (window, &paint_info); {
-// 		SetBkMode (context, TRANSPARENT);
-// 		for (int i = 0; i < queue -> count; ++i) {
-// 			laser_render_data* command = (laser_render_data*)queue -> entries[i];
+	ReleaseDC (window, device_context);
 
-// 			if (command -> type == RT_RECT) {
-// 				HBRUSH brush = CreateSolidBrush (RGB (command -> color.r,
-// 													  command -> color.g,
-// 													  command -> color.b));
+	opengl_set_screenspace (WINDOW_WIDTH, WINDOW_HEIGHT);
 
-// 				laser_rect* rect_data = (laser_rect*)command -> data;
-// 				RECT rect = laser_rect_to_RECT (*rect_data);
-
-// 				FillRect (context, &rect, brush);
-// 				DeleteObject (brush);
-// 			}
-// 			else if (command -> type == RT_TEXT) {
-// 				SetTextColor (context, RGB (command -> color.r,
-// 											command -> color.g,
-// 											command -> color.b));
-
-// 				laser_render_text_data* text_data = (laser_render_text_data*)command -> data;
-// 				RECT rect = laser_rect_to_RECT (text_data -> rect);
-
-// 				SelectObject (context, fonts[text_data -> font]);
-
-// 				DRAWTEXTPARAMS text_params = { };
-// 				text_params.cbSize = sizeof (text_params);
-// 				text_params.iTabLength = 4;
-// 				DrawTextEx (context, text_data -> text, text_data -> text_size,
-// 							&rect,
-// 							DT_TOP | DT_LEFT | DT_EXPANDTABS | DT_TABSTOP | DT_NOPREFIX,
-// 							&text_params);
-// 			}
-// 		}
-// 	}
-// 	EndPaint (window, &paint_info);
-// }
-
-void platform_push_to_render_queue (platform_render_queue* queue, void* entry) {
-	queue -> entries[queue -> count++] = entry;
+	return true;
 }
 
 static LRESULT CALLBACK window_proc (HWND window, UINT msg, WPARAM wParam, LPARAM lParam) {
@@ -182,32 +164,32 @@ int CALLBACK WinMain (HINSTANCE hInstance, HINSTANCE prevInstance,
 									hInstance, 
 									0);
 
-		HDC device_context = GetDC (window);
-		PIXELFORMATDESCRIPTOR format = { };
-		format.nSize = sizeof (format);
-		format.nVersion = 1;
-		format.dwFlags = PFD_SUPPORT_OPENGL | PFD_DRAW_TO_WINDOW | PFD_DOUBLEBUFFER;
-		format.cColorBits = 32;
-		format.cAlphaBits = 8;
-		format.iLayerType = PFD_MAIN_PLANE;
-
-		int format_index = ChoosePixelFormat (device_context, &format);
-		PIXELFORMATDESCRIPTOR suggested_format;
-		DescribePixelFormat (device_context, format_index, 
-							 sizeof (suggested_format), &suggested_format);
-		SetPixelFormat (device_context, format_index, &suggested_format);
-
-		HGLRC gl_context = wglCreateContext (device_context);
-		if (wglMakeCurrent (device_context, gl_context))
-			platform_log ("Initialized OpenGL rendering context.\n");
-		else {
-			platform_log ("Wasn't able to initialize OpenGL rendering context.Exiting...\n");
-			return 1;
-		}
-
-		ReleaseDC (window, device_context);
-
 		if (window) {
+			HDC device_context = GetDC (window);
+
+			if (initialize_open_gl (window))
+				platform_log ("Initialized OpenGL rendering context.\n");
+			else {
+				platform_log ("Wasn't able to initialize OpenGL rendering context.Exiting...\n");
+				return -1;
+			}
+
+			lc_memory app_memory = { };
+			app_memory.storage_size = Megabytes (128);
+			app_memory.storage = VirtualAlloc (0, app_memory.storage_size, 
+											   MEM_RESERVE | MEM_COMMIT,
+											   PAGE_READWRITE);
+
+			app_memory.temp_storage_size = Megabytes (256);
+			app_memory.temp_storage = VirtualAlloc (0, app_memory.temp_storage_size,
+													MEM_RESERVE | MEM_COMMIT,
+													PAGE_READWRITE);
+
+			if (!app_memory.storage) {
+				platform_log ("Could not allocate %d bytes of memory for the application. Exiting...", app_memory.storage_size);
+				return 0;
+			}
+
 			ShowWindow (window, cmdShow);
 
 			BOOL running = TRUE;
@@ -221,11 +203,11 @@ int CALLBACK WinMain (HINSTANCE hInstance, HINSTANCE prevInstance,
 				TranslateMessage (&msg);
 				DispatchMessage (&msg);
 
-				glViewport (0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
-				glClearColor (1.0f, 0.0f, 1.0f, 0.0f);
-				glClear (GL_COLOR_BUFFER_BIT);
+				app_update (&app_memory, WINDOW_WIDTH, WINDOW_HEIGHT);
 				SwapBuffers (device_context);
 			}
+
+			ReleaseDC (window, device_context);
 		}
 		else
 			platform_log ("Windows couldn't create a window. Aborting...\n");
