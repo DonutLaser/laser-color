@@ -195,7 +195,7 @@ int CALLBACK WinMain (HINSTANCE hInstance, HINSTANCE prevInstance,
 				return 0;
 			}
 
-			app_init (&app_memory);
+			app_init (&app_memory, client_width, client_height);
 
 			ShowWindow (window, cmdShow);
 
@@ -242,7 +242,7 @@ int CALLBACK WinMain (HINSTANCE hInstance, HINSTANCE prevInstance,
 					}
 				}
 
-				app_update (&app_memory, input, client_width, client_height);
+				app_update (&app_memory, input);
 				SwapBuffers (device_context);
 			}
 

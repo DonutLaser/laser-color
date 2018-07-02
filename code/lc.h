@@ -14,10 +14,11 @@ struct lc_input {
 };
 
 struct lc_app {
+	int client_width, client_height;
 	lc_color current_color;
 };
 
-void app_init (lc_memory* memory);
-void app_update (lc_memory* memory, lc_input input, int width, int height);
+void app_init (lc_memory* memory, int client_width, int client_height);
+void app_update (lc_memory* memory, lc_input input);
 
 #endif 

@@ -35,25 +35,28 @@ static void handle_input (lc_app* app, lc_input input) {
 	}
 }
 
-void app_init (lc_memory* memory) {
+void app_init (lc_memory* memory, int client_width, int client_height) {
 	lc_app* app = (lc_app*)memory -> storage;
 	app -> current_color = make_colorb (DEFAULT_COLOR);
+
+	app -> client_width = client_width;
+	app -> client_height = client_height;
 }
 
-void app_update (lc_memory* memory, lc_input input, int width, int height) {
+void app_update (lc_memory* memory, lc_input input) {
 	lc_app* app = (lc_app*)memory -> storage;
 
 	handle_input (app, input);
 
 	lc_color clear_color = make_colorb (CLEAR_COLOR);
-	opengl_clear (width, height, clear_color);
+	opengl_clear (app -> client_width, app -> client_height, clear_color);
 
 	// (0,0) is bottom left, (width, height) top right 
 	lc_rect color_rect = { };
 	color_rect.x = PADDING;
-	color_rect.y = height - PADDING;
-	color_rect.width = width - PADDING;
-	color_rect.height = (height - (height / 3)) - PADDING;
+	color_rect.y = app -> client_height - PADDING;
+	color_rect.width = app -> client_width - PADDING;
+	color_rect.height = (app -> client_height - (app -> client_height / 3)) - PADDING;
 
 	lc_color color = app -> current_color;
 	opengl_rect (color_rect, color);
