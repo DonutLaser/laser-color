@@ -98,7 +98,7 @@ static void platform_log (const char* format, ...) {
 // 	return new_rect;
 // }
 
-static bool initialize_open_gl (HWND window) {
+static bool initialize_open_gl (HWND window, int client_width, int client_height) {
 	HDC device_context = GetDC (window);
 	PIXELFORMATDESCRIPTOR format = { };
 	format.nSize = sizeof (format);
@@ -122,7 +122,7 @@ static bool initialize_open_gl (HWND window) {
 
 	ReleaseDC (window, device_context);
 
-	opengl_set_screenspace (WINDOW_WIDTH, WINDOW_HEIGHT);
+	opengl_set_screenspace (client_width, client_height);
 
 	return true;
 }
@@ -167,7 +167,12 @@ int CALLBACK WinMain (HINSTANCE hInstance, HINSTANCE prevInstance,
 		if (window) {
 			HDC device_context = GetDC (window);
 
-			if (initialize_open_gl (window))
+			RECT client_rect;
+			GetClientRect (window, &client_rect);
+			int client_width = client_rect.right - client_rect.left;
+			int client_height = client_rect.bottom - client_rect.top;
+
+			if (initialize_open_gl (window, client_width, client_height))
 				platform_log ("Initialized OpenGL rendering context.\n");
 			else {
 				platform_log ("Wasn't able to initialize OpenGL rendering context.Exiting...\n");
@@ -203,7 +208,7 @@ int CALLBACK WinMain (HINSTANCE hInstance, HINSTANCE prevInstance,
 				TranslateMessage (&msg);
 				DispatchMessage (&msg);
 
-				app_update (&app_memory, WINDOW_WIDTH, WINDOW_HEIGHT);
+				app_update (&app_memory, client_width, client_height);
 				SwapBuffers (device_context);
 			}
 

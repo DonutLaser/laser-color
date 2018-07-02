@@ -7,8 +7,7 @@
 struct lc_memory;
 
 struct lc_app {
-	lc_rect test_rect;
-	lc_color test_color;
+	lc_color current_color;
 };
 
 void app_update (lc_memory* memory, int width, int height);
