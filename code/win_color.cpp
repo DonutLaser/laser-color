@@ -195,6 +195,8 @@ int CALLBACK WinMain (HINSTANCE hInstance, HINSTANCE prevInstance,
 				return 0;
 			}
 
+			app_init (&app_memory);
+
 			ShowWindow (window, cmdShow);
 
 			BOOL running = TRUE;
@@ -205,10 +207,42 @@ int CALLBACK WinMain (HINSTANCE hInstance, HINSTANCE prevInstance,
 				if (!running)
 					break;
 
-				TranslateMessage (&msg);
-				DispatchMessage (&msg);
+				lc_input input = { };
+				input.modifier = M_NONE;
+				switch (msg.message) {
+					case WM_SYSKEYDOWN:
+					case WM_KEYDOWN: {
+						if (GetKeyState (VK_CONTROL) & 0x8000)
+							input.modifier |= M_CTRL ;
+						if (GetKeyState (VK_SHIFT) & 0x8000)
+							input.modifier |= M_SHIFT;
+						if (GetKeyState (VK_MENU) & 0x8000)
+							input.modifier |= M_ALT;
+						if (GetKeyState (VK_CAPITAL) & 0x0001)
+							input.modifier |= M_CAPS;
 
-				app_update (&app_memory, client_width, client_height);
+						switch (msg.wParam) {
+							case VK_F4: {
+								if (input.modifier & M_ALT)
+									PostQuitMessage (0);
+
+								break;
+							}
+							default: {
+								input.key = (int)msg.wParam; 
+								break;
+							}
+						}
+						break;
+					}
+					default: {
+						TranslateMessage (&msg);
+						DispatchMessage (&msg);
+						break;
+					}
+				}
+
+				app_update (&app_memory, input, client_width, client_height);
 				SwapBuffers (device_context);
 			}
 

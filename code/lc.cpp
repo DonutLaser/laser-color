@@ -4,14 +4,48 @@
 #include "lc_memory.h"
 #include "lc_opengl.h"
 
-#define PADDING 5
-#define CLEAR_COLOR { 0.7f, 0.7f, 0.7f }
-#define DEFAULT_COLOR { 1.0f, 0.0f, 0.0f }
+#define clamp_value(x, min, max) (x < min) ? min : ((x > max) ? max : x)
 
-void app_update (lc_memory* memory, int width, int height) {
+#define PADDING 5
+#define CLEAR_COLOR 200, 200, 200
+#define DEFAULT_COLOR 255, 0, 0
+
+#define KEY_COMMA 0xBC
+#define KEY_POINT 0xBE
+
+#define SINGLE_STEP 0.00392f // 1/255
+#define MEDIUM_STEP 0.0392f  // 10/255
+
+static void handle_input (lc_app* app, lc_input input) {
+	switch (input.key) {
+		case KEY_COMMA: {
+			float next_value = app -> current_color.r - 
+				(input.modifier & M_SHIFT ? MEDIUM_STEP : SINGLE_STEP);
+
+			app -> current_color.r = clamp_value (next_value, 0.0f, 1.0f);
+			break;
+		}
+		case KEY_POINT: {
+			float next_value = app -> current_color.r +
+				(input.modifier & M_SHIFT ? MEDIUM_STEP : SINGLE_STEP);
+
+			app -> current_color.r = clamp_value (next_value, 0.0f, 1.0f);
+			break;
+		}
+	}
+}
+
+void app_init (lc_memory* memory) {
+	lc_app* app = (lc_app*)memory -> storage;
+	app -> current_color = make_colorb (DEFAULT_COLOR);
+}
+
+void app_update (lc_memory* memory, lc_input input, int width, int height) {
 	lc_app* app = (lc_app*)memory -> storage;
 
-	lc_color clear_color = CLEAR_COLOR;
+	handle_input (app, input);
+
+	lc_color clear_color = make_colorb (CLEAR_COLOR);
 	opengl_clear (width, height, clear_color);
 
 	// (0,0) is bottom left, (width, height) top right 
@@ -21,6 +55,6 @@ void app_update (lc_memory* memory, int width, int height) {
 	color_rect.width = width - PADDING;
 	color_rect.height = (height - (height / 3)) - PADDING;
 
-	lc_color color = DEFAULT_COLOR;
+	lc_color color = app -> current_color;
 	opengl_rect (color_rect, color);
 }
