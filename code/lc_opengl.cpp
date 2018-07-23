@@ -35,12 +35,12 @@ void opengl_rect (lc_rect rect, lc_color color) {
     glColor4f(color.r, color.g, color.b, 0.0f);
 
     glVertex2f ((float)rect.x, (float)rect.y);
-    glVertex2f ((float)rect.width, (float)rect.y);
-    glVertex2f ((float)rect.width, (float)rect.height);
+    glVertex2f ((float)rect.x + (float)rect.width, (float)rect.y);
+    glVertex2f ((float)rect.x + (float)rect.width, (float)rect.y - (float)rect.height);
 
     glVertex2f ((float)rect.x, (float)rect.y);
-    glVertex2f ((float)rect.width, (float)rect.height);
-    glVertex2f ((float)rect.x, (float)rect.height);
+    glVertex2f ((float)rect.x + (float)rect.width, (float)rect.y - (float)rect.height);
+    glVertex2f ((float)rect.x, (float)rect.y - (float)rect.height);
 
     glEnd();
 }
