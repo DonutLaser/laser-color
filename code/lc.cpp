@@ -20,11 +20,12 @@
 #define KEY_POINT 	0xBE
 #define KEY_J		0x4A
 #define KEY_K		0x4B
+#define KEY_ALPHA_0 0x30
+#define KEY_ALPHA_4 0x34
 
 #define SINGLE_STEP 0.00392f // 1/255
 #define MEDIUM_STEP 0.0392f  // 10/255
-#define FULL 1.0f
-#define NONE 0.0f
+#define FULL_STEP 1.0f
 
 enum change_direction { D_INCREASE = 1, D_DECREASE = -1 };
 
@@ -48,6 +49,16 @@ static void handle_input (lc_app* app, lc_input input) {
 		}
 		case KEY_K: {
 			app -> current_component = (color_component)(clamp_value (app -> current_component - 1, 0, CC_B));
+			break;
+		}
+		case KEY_ALPHA_0: {
+			change_color_component_value (app, FULL_STEP, D_DECREASE);
+			break;
+		}
+		case KEY_ALPHA_4: {
+			if (input.modifier & M_SHIFT)
+				change_color_component_value (app, FULL_STEP, D_INCREASE);
+
 			break;
 		}
 		case KEY_COMMA: {
