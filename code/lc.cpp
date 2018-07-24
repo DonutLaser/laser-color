@@ -23,10 +23,20 @@
 
 #define SINGLE_STEP 0.00392f // 1/255
 #define MEDIUM_STEP 0.0392f  // 10/255
+#define FULL 1.0f
+#define NONE 0.0f
 
 enum change_direction { D_INCREASE = 1, D_DECREASE = -1 };
 
-static void change_color_component_value (float* component, float amount, change_direction direction) {
+static void change_color_component_value (lc_app* app, float amount, change_direction direction) {
+	float* component;
+	if (app -> current_component == CC_R)
+		component = &app -> current_color.r;
+	else if (app -> current_component == CC_G)
+		component = &app -> current_color.g;
+	else
+		component = &app -> current_color.b;
+
 	*component = clamp_value (*component + ((int)direction * amount), 0.0f, 1.0f);
 }
 
@@ -41,39 +51,17 @@ static void handle_input (lc_app* app, lc_input input) {
 			break;
 		}
 		case KEY_COMMA: {
-			if (app -> current_component == CC_R) {
-				change_color_component_value (&app -> current_color.r,
-											  (input.modifier & M_SHIFT ? MEDIUM_STEP : SINGLE_STEP),
-											  D_DECREASE);
-			}
-			else if (app -> current_component == CC_G) {
-				change_color_component_value (&app -> current_color.g,
-											  (input.modifier & M_SHIFT ? MEDIUM_STEP : SINGLE_STEP),
-											  D_DECREASE);
-			}
-			else if (app -> current_component == CC_B) {
-				change_color_component_value (&app -> current_color.b,
-											  (input.modifier & M_SHIFT ? MEDIUM_STEP : SINGLE_STEP),
-											  D_DECREASE);
-			}
+			change_color_component_value (app, 
+										 (input.modifier & M_SHIFT ? MEDIUM_STEP : SINGLE_STEP), 
+										 D_DECREASE);
+
 			break;
 		}
 		case KEY_POINT: {
-			if (app -> current_component == CC_R) {
-				change_color_component_value (&app -> current_color.r,
-											  (input.modifier & M_SHIFT ? MEDIUM_STEP : SINGLE_STEP),
-											  D_INCREASE);
-			}
-			else if (app -> current_component == CC_G) {
-				change_color_component_value (&app -> current_color.g,
-											  (input.modifier & M_SHIFT ? MEDIUM_STEP : SINGLE_STEP),
-											  D_INCREASE);
-			}
-			else if (app -> current_component == CC_B) {
-				change_color_component_value (&app -> current_color.b,
-											  (input.modifier & M_SHIFT ? MEDIUM_STEP : SINGLE_STEP),
-											  D_INCREASE);
-			}
+			change_color_component_value (app, 
+										 (input.modifier & M_SHIFT ? MEDIUM_STEP : SINGLE_STEP), 
+										 D_INCREASE);
+
 			break;
 		}
 	}
