@@ -1,5 +1,8 @@
 #include "lc.h"
 
+#include <stdio.h>
+#include <stdlib.h>
+
 #include "lc_platform.h"
 #include "lc_shared.h"
 #include "lc_memory.h"
@@ -20,12 +23,16 @@
 #define KEY_POINT 	0xBE
 #define KEY_J		0x4A
 #define KEY_K		0x4B
+#define KEY_N 		0x4E
 #define KEY_ALPHA_0 0x30
 #define KEY_ALPHA_4 0x34
 
 #define SINGLE_STEP 0.00392f // 1/255
 #define MEDIUM_STEP 0.0392f  // 10/255
 #define FULL_STEP 1.0f
+
+#define PATH_MAX 128 
+#define BUFFER_SIZE 4096
 
 enum change_direction { D_INCREASE = 1, D_DECREASE = -1 };
 
@@ -41,6 +48,38 @@ static void change_color_component_value (lc_app* app, float amount, change_dire
 	*component = clamp_value (*component + ((int)direction * amount), 0.0f, 1.0f);
 }
 
+static bool add_color_to_color_library (lc_color_library* swatches, lc_color color) {
+	if (swatches -> count + 1 < MAX_COLORS_IN_LIBRARY) {
+		swatches -> colors[swatches -> count++] = color;
+		return true;
+	}
+
+	return false;
+}
+
+static void save_color_library (lc_app* app) {
+	char buffer[BUFFER_SIZE];
+	buffer[0] = '\0';
+	
+	int bytes_written = 0;
+
+	app -> platform.log ("Found %d colors in the library. Saving... \n", app -> color_swatches.count);
+
+	for (int i = 0; i < app -> color_swatches.count; ++i) {
+		bytes_written = sprintf_s (buffer, "%s%f %f %f\n", buffer,
+								   app -> color_swatches.colors[i].r, 
+								   app -> color_swatches.colors[i].g,
+								   app -> color_swatches.colors[i].b);
+
+		buffer[bytes_written] = '\0';
+	}
+
+	if (app -> platform.write_file (app -> color_library_file.handle, buffer, bytes_written, WM_OVERWRITE))
+		app -> platform.log ("Color library successfully saved at %s.\n", app -> color_library_file.path);
+	else
+		app -> platform.log ("Unexpected error when saving the color library at %s.\n", app -> color_library_file.path);
+}
+
 static void handle_input (lc_app* app, lc_input input) {
 	switch (input.key) {
 		case KEY_J: {
@@ -49,6 +88,16 @@ static void handle_input (lc_app* app, lc_input input) {
 		}
 		case KEY_K: {
 			app -> current_component = (color_component)(clamp_value (app -> current_component - 1, 0, CC_B));
+			break;
+		}
+		case KEY_N: {
+			if (input.modifier & M_CTRL) {
+				if (add_color_to_color_library (&app -> color_swatches, app -> current_color))
+					app -> platform.log ("Successfully added new color to the library.\n");
+				else
+					app -> platform.log ("New color could not be added to the library. Library is full.\n");
+			}
+
 			break;
 		}
 		case KEY_ALPHA_0: {
@@ -124,13 +173,26 @@ static void draw_slider (int width, int height, lc_color color, float max_value,
 
 void app_init (lc_memory* memory, platform_api platform, int client_width, int client_height) {
 	lc_app* app = (lc_app*)memory -> storage;
+	app -> platform = platform;
+
+	app -> platform.log ("Initializing application...\n");
+
 	app -> current_color = make_colorb (DEFAULT_COLOR);
 	app -> current_component = CC_R;
 
 	app -> client_width = client_width;
 	app -> client_height = client_height;
 
-	app -> platform = platform;
+	app -> color_library_file.path = (char*)malloc (sizeof (char) * PATH_MAX);
+	sprintf_s (app -> color_library_file.path, PATH_MAX, "%s", "D:/test_color_library.lclib");
+	app -> color_library_file.handle = app -> platform.open_file ("D:/test_color_library.lclib");
+
+	if (app -> color_library_file.handle)
+		app -> platform.log ("Color library file was successfully opened.\n");
+	else
+		app -> platform.log ("Error opening the color library file.\n");
+
+	app -> color_swatches = { };
 }
 
 void app_update (lc_memory* memory, lc_input input) {
@@ -159,4 +221,12 @@ void app_update (lc_memory* memory, lc_input input) {
 				 &remaining_y_space, app -> current_component == CC_G);
 	draw_slider (slider_width, SLIDER_HEIGHT, make_colorb (0, 0, 225), 1.0f, app -> current_color.b,
 				 &remaining_y_space, app -> current_component == CC_B);
+}
+
+void app_close (lc_memory* memory) {
+	lc_app* app = (lc_app*)memory -> storage;
+	
+	save_color_library (app);
+
+	free (app -> color_library_file.path);
 }

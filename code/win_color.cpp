@@ -254,6 +254,8 @@ int CALLBACK WinMain (HINSTANCE hInstance, HINSTANCE prevInstance,
 			}
 
 			ReleaseDC (window, device_context);
+
+			app_close (&app_memory);
 		}
 		else
 			platform_log ("Windows couldn't create a window. Aborting...\n");
