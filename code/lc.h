@@ -2,6 +2,7 @@
 #define LC_H
 
 #include "lc_shared.h"
+#include "lc_platform.h"
 
 // Forward declarations
 struct lc_memory;
@@ -18,9 +19,11 @@ struct lc_app {
 	int client_width, client_height;
 	lc_color current_color;
 	color_component current_component;
+
+	platform_api platform;
 };
 
-void app_init (lc_memory* memory, int client_width, int client_height);
+void app_init (lc_memory* memory, platform_api platform, int client_width, int client_height);
 void app_update (lc_memory* memory, lc_input input);
 
 #endif 

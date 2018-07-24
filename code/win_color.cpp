@@ -195,7 +195,14 @@ int CALLBACK WinMain (HINSTANCE hInstance, HINSTANCE prevInstance,
 				return 0;
 			}
 
-			app_init (&app_memory, client_width, client_height);
+			platform_api api = { };
+			api.open_file = platform_open_file;
+			api.write_file = platform_write_file;
+			api.read_file = platform_read_file;
+			api.close_file = platform_close_file;
+			api.log = platform_log;
+
+			app_init (&app_memory, api, client_width, client_height);
 
 			ShowWindow (window, cmdShow);
 
