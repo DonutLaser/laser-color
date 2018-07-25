@@ -227,6 +227,8 @@ void app_update (lc_memory* memory, lc_input input) {
 	draw_slider (&layout, slider_width, SLIDER_HEIGHT, make_colorb (0, 0, 225), 1.0f, app -> current_color.b,
 				 app -> current_component == CC_B);
 
+	layout_space (&layout);
+
 	layout_begin_horizontal_group (&layout); {
 		for (int i = 0; i < app -> color_swatches.count; ++i)
 			draw_color_swatch (&layout, SWATCH_WIDTH, SWATCH_HEIGHT, app -> color_swatches.colors[i]);

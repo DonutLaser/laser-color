@@ -32,3 +32,11 @@ void layout_auto_position (layout_info* info, lc_rect* rect) {
 		info -> remaining_width -= rect -> width;
 	}
 }
+
+void layout_space (layout_info* info, int amount) {
+	info -> remaining_height -= amount;
+}
+
+void layout_space (layout_info* info) {
+	info -> remaining_height -= SPACE;
+}
