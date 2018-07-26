@@ -69,11 +69,11 @@ static void save_color_library (lc_app* app) {
 	app -> platform.log ("Found %d colors in the library. Saving... \n", app -> color_swatches.count);
 
 	for (int i = 0; i < app -> color_swatches.count; ++i) {
-		bytes_written = sprintf_s (buffer, "%s%f %f %f\n", buffer,
-								   app -> color_swatches.colors[i].r, 
-								   app -> color_swatches.colors[i].g,
-								   app -> color_swatches.colors[i].b);
+		byte r = color_component_f2b (app -> color_swatches.colors[i].r);
+		byte g = color_component_f2b (app -> color_swatches.colors[i].g);
+		byte b = color_component_f2b (app -> color_swatches.colors[i].b);
 
+		bytes_written = sprintf_s (buffer, "%s%d %d %d\n", buffer, r, g, b);
 		buffer[bytes_written] = '\0';
 	}
 
@@ -81,6 +81,44 @@ static void save_color_library (lc_app* app) {
 		app -> platform.log ("Color library successfully saved at %s.\n", app -> color_library_file.path);
 	else
 		app -> platform.log ("Unexpected error when saving the color library at %s.\n", app -> color_library_file.path);
+}
+
+static void load_color_library (lc_app* app) {
+	char* buffer;
+
+	int digitCount = 0;
+	byte component = 0;
+	int component_index = 0;
+	byte rgb[3] = { 0, 0, 0 };
+
+	if (app -> platform.read_file (app -> color_library_file.handle, &buffer)) {
+		while (*buffer != '\0') {
+			if (*buffer == ' ') {
+				rgb[component_index++] = component;
+				component = 0;
+				digitCount = 0;
+			}
+			else if (*buffer == '\n') {
+				rgb[component_index++] = component;
+				component = 0;
+				digitCount = 0;
+				component_index = 0;
+
+				add_color_to_color_library (&app -> color_swatches, 
+												make_colorb (rgb[0], rgb[1], rgb[2]));
+			}
+			else {
+				component += (*buffer - 0x30) * (10 * digitCount);
+				++digitCount;
+			}
+
+			++buffer;
+		}
+
+		app -> platform.log ("Successfully added %d colors to the library\n", app -> color_swatches.count);
+	}
+	else
+		app -> platform.log ("Could not read the color library file.\n");
 }
 
 static void handle_input (lc_app* app, lc_input input) {
@@ -188,16 +226,21 @@ void app_init (lc_memory* memory, platform_api platform, int client_width, int c
 	app -> client_width = client_width;
 	app -> client_height = client_height;
 
+	app -> color_swatches = { };
+
 	app -> color_library_file.path = (char*)malloc (sizeof (char) * PATH_MAX);
 	sprintf_s (app -> color_library_file.path, PATH_MAX, "%s", "D:/test_color_library.lclib");
 	app -> color_library_file.handle = app -> platform.open_file ("D:/test_color_library.lclib");
 
-	if (app -> color_library_file.handle)
+
+	if (app -> color_library_file.handle) {
 		app -> platform.log ("Color library file was successfully opened.\n");
+		app -> platform.log ("Loading color library...\n");
+		load_color_library (app);
+		app -> platform.log ("Color library loaded.\n");
+	}
 	else
 		app -> platform.log ("Error opening the color library file.\n");
-
-	app -> color_swatches = { };
 }
 
 void app_update (lc_memory* memory, lc_input input) {
