@@ -71,6 +71,7 @@ static void platform_log (const char* format, ...) {
 	va_start (arguments, format);
 
 	bytes_written = _vsnprintf_s (message, sizeof (message) - 1, format, arguments);
+	message[bytes_written++] = '\n';
 
 	if (bytes_written > 0)
 		platform_write_file (global_log_file, message, bytes_written, WM_APPEND);
@@ -125,7 +126,7 @@ int CALLBACK WinMain (HINSTANCE hInstance, HINSTANCE prevInstance,
 	global_log_file = platform_open_file ("output.log");
 	platform_clear_file (global_log_file);
 
-	platform_log ("Opening Laser Color Picker...\n\n");
+	platform_log ("Opening Laser Color Picker...\n");
 
 	WNDCLASS wndClass = { };
 	wndClass.style = CS_HREDRAW | CS_OWNDC | CS_VREDRAW;
@@ -134,7 +135,7 @@ int CALLBACK WinMain (HINSTANCE hInstance, HINSTANCE prevInstance,
 	wndClass.lpszClassName = "Laser Color";
 
 	if (RegisterClass (&wndClass)) {
-		platform_log ("Creating a window of size %dx%d\n", WINDOW_WIDTH, WINDOW_HEIGHT);
+		platform_log ("Creating a window of size %dx%d", WINDOW_WIDTH, WINDOW_HEIGHT);
 		HWND window = CreateWindow ("Laser Color", "Laser Color",
 									WS_OVERLAPPED | WS_CAPTION | 
 										WS_SYSMENU | WS_MINIMIZEBOX,
@@ -153,9 +154,9 @@ int CALLBACK WinMain (HINSTANCE hInstance, HINSTANCE prevInstance,
 			int client_height = client_rect.bottom - client_rect.top;
 
 			if (initialize_open_gl (window, client_width, client_height))
-				platform_log ("Initialized OpenGL rendering context.\n");
+				platform_log ("Initialized OpenGL rendering context.");
 			else {
-				platform_log ("Wasn't able to initialize OpenGL rendering context.Exiting...\n");
+				platform_log ("Wasn't able to initialize OpenGL rendering context.Exiting...");
 				return -1;
 			}
 
@@ -238,10 +239,10 @@ int CALLBACK WinMain (HINSTANCE hInstance, HINSTANCE prevInstance,
 			app_close (&app_memory);
 		}
 		else
-			platform_log ("Windows couldn't create a window. Aborting...\n");
+			platform_log ("Windows couldn't create a window. Aborting...");
 	}
 
-	platform_log ("Closing Laser Color Picker...\n");
+	platform_log ("Closing Laser Color Picker...");
 
 	platform_close_file (global_log_file);
 	return 0;

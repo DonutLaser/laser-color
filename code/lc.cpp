@@ -83,7 +83,7 @@ static void save_color_library (lc_app* app) {
 	
 	int bytes_written = 0;
 
-	app -> platform.log ("Found %d colors in the library. Saving... \n", app -> color_swatches.count);
+	app -> platform.log ("Found %d colors in the library. Saving... ", app -> color_swatches.count);
 
 	for (int i = 0; i < app -> color_swatches.count; ++i) {
 		byte r = color_component_f2b (app -> color_swatches.colors[i].r);
@@ -95,9 +95,9 @@ static void save_color_library (lc_app* app) {
 	}
 
 	if (app -> platform.write_file (app -> color_library_file.handle, buffer, bytes_written, WM_OVERWRITE))
-		app -> platform.log ("Color library successfully saved at %s.\n", app -> color_library_file.path);
+		app -> platform.log ("Color library successfully saved at %s.", app -> color_library_file.path);
 	else
-		app -> platform.log ("Unexpected error when saving the color library at %s.\n", app -> color_library_file.path);
+		app -> platform.log ("Unexpected error when saving the color library at %s.", app -> color_library_file.path);
 }
 
 static void load_color_library (lc_app* app) {
@@ -111,18 +111,14 @@ static void load_color_library (lc_app* app) {
 		while (*buffer != '\0') {
 			if (*buffer == ' ') {
 				component[current_char] = '\0';
-				app -> platform.log ("Parsed string %s\n", component);
 				byte value = string_to_byte (component); 
-				app -> platform.log ("Value: %d\n", value);
 				rgb[current_component++] = value;
 
 				current_char = 0;
 			}
 			else if (*buffer == '\n') {
 				component[current_char] = '\0';
-				app -> platform.log ("Parsed string %s\n", component);
 				byte value = string_to_byte (component);
-				app -> platform.log ("Value: %d\n", value);
 				rgb[current_component] = value;
 
 				add_color_to_color_library (&app -> color_swatches, 
@@ -137,10 +133,10 @@ static void load_color_library (lc_app* app) {
 			++buffer;
 		}
 
-		app -> platform.log ("Successfully added %d colors to the library\n", app -> color_swatches.count);
+		app -> platform.log ("Successfully added %d colors to the library", app -> color_swatches.count);
 	}
 	else
-		app -> platform.log ("Could not read the color library file.\n");
+		app -> platform.log ("Could not read the color library file.");
 }
 
 static void handle_input (lc_app* app, lc_input input) {
@@ -155,9 +151,9 @@ static void handle_input (lc_app* app, lc_input input) {
 		case KEY_N: {
 			if (input.modifier & M_CTRL) {
 				if (add_color_to_color_library (&app -> color_swatches, app -> current_color))
-					app -> platform.log ("Successfully added new color to the library.\n");
+					app -> platform.log ("Successfully added new color to the library.");
 				else
-					app -> platform.log ("New color could not be added to the library. Library is full.\n");
+					app -> platform.log ("New color could not be added to the library. Library is full.");
 			}
 
 			break;
@@ -232,7 +228,7 @@ void app_init (lc_memory* memory, platform_api platform, int client_width, int c
 	lc_app* app = (lc_app*)memory -> storage;
 	app -> platform = platform;
 
-	app -> platform.log ("Initializing application...\n");
+	app -> platform.log ("Initializing application...");
 
 	app -> current_color = make_colorb (DEFAULT_COLOR);
 	app -> current_component = &app -> current_color.r;
@@ -249,13 +245,13 @@ void app_init (lc_memory* memory, platform_api platform, int client_width, int c
 
 
 	if (app -> color_library_file.handle) {
-		app -> platform.log ("Color library file was successfully opened.\n");
-		app -> platform.log ("Loading color library...\n");
+		app -> platform.log ("Color library file was successfully opened.");
+		app -> platform.log ("Loading color library...");
 		load_color_library (app);
-		app -> platform.log ("Color library loaded.\n");
+		app -> platform.log ("Color library loaded.");
 	}
 	else
-		app -> platform.log ("Error opening the color library file.\n");
+		app -> platform.log ("Error opening the color library file.");
 }
 
 void app_update (lc_memory* memory, lc_input input) {
