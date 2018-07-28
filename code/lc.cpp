@@ -67,7 +67,7 @@ static void change_color_component_value (lc_app* app, float amount, change_dire
 }
 
 static bool add_color_to_color_library (lc_color_library* swatches, lc_color color) {
-	if (swatches -> count + 1 < MAX_COLORS_IN_LIBRARY) {
+	if (swatches -> count < MAX_COLORS_IN_LIBRARY) {
 		swatches -> colors[swatches -> count++] = color;
 		return true;
 	}
