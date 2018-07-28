@@ -25,7 +25,6 @@
 #define SWATCH_AREA_COLOR 170, 170, 170
 #define OUTLINE_COLOR 80, 80, 80
 #define DEFAULT_COLOR 255, 255, 255 
-#define HIGHLIGHT_COLOR 170, 170, 170
 #define HANDLE_COLOR 220, 220, 220
 
 #define KEY_H 		0x48
@@ -33,6 +32,8 @@
 #define KEY_K		0x4B
 #define KEY_L 		0x4C
 #define KEY_I 		0x49
+#define KEY_W		0x57
+#define KEY_B 		0x42
 #define KEY_ALPHA_0 0x30
 
 #define SINGLE_STEP 0.00392f // 1/255
@@ -68,9 +69,31 @@ static void toggle_color_component (float* component) {
 								  (*component >= 0.5f) ? D_DECREASE :  D_INCREASE);
 }
 
-static bool add_color_to_color_library (lc_color_library* swatches, lc_color color) {
-	if (swatches -> count < MAX_COLORS_IN_LIBRARY) {
-		swatches -> colors[swatches -> count++] = color;
+static void change_color_swatch (lc_app* app, change_direction direction, bool switch_to_newly_added_swatch = false) {
+	if (app -> color_swatches.count == 0) {
+		app -> current_swatch_index = -1;
+		return;
+	}
+
+	if (switch_to_newly_added_swatch) {
+		app -> current_swatch_index = app -> color_swatches.count - 1;
+		return;
+	}
+
+	app -> current_swatch_index += (int)direction;
+	if (app -> current_swatch_index == app -> color_swatches.count)
+		app -> current_swatch_index = 0;
+	else if (app -> current_swatch_index == -1)
+		app -> current_swatch_index = app -> color_swatches.count - 1;
+
+	app -> current_color = app -> color_swatches.colors[app -> current_swatch_index];
+}
+
+static bool add_color_to_color_library (lc_app* app, lc_color color) {
+	if (app -> color_swatches.count < MAX_COLORS_IN_LIBRARY) {
+		app -> color_swatches.colors[app -> color_swatches.count++] = color;
+
+		change_color_swatch (app, D_INCREASE, true);
 		return true;
 	}
 
@@ -121,7 +144,7 @@ static void load_color_library (lc_app* app) {
 				byte value = string_to_byte (component);
 				rgb[current_component] = value;
 
-				add_color_to_color_library (&app -> color_swatches, 
+				add_color_to_color_library (app, 
 											make_colorb (rgb[0], rgb[1], rgb[2]));
 
 				current_char = 0;
@@ -149,11 +172,11 @@ static void handle_input (lc_app* app, lc_input input) {
 			break;
 		}
 		case KEY_I: {
-			if (add_color_to_color_library (&app -> color_swatches, app -> current_color))
+			if (add_color_to_color_library (app, app -> current_color))
 				app -> platform.log ("Successfully added new color to the library.");
 			else
 				app -> platform.log ("New color could not be added to the library. Library is full.");
-			
+
 			break;
 		}
 		case KEY_ALPHA_0: {
@@ -166,6 +189,13 @@ static void handle_input (lc_app* app, lc_input input) {
 			float amount = input.modifier & M_SHIFT ? MEDIUM_STEP : SINGLE_STEP;
 			change_color_component_value (app -> current_component, amount,
 										  input.key == KEY_H ? D_DECREASE : D_INCREASE);
+
+			break;
+		}
+		case KEY_W:
+		case KEY_B: {
+			change_color_swatch (app, input.key == KEY_W ? D_INCREASE : D_DECREASE);
+			break;
 		}
 	}
 }
@@ -206,12 +236,10 @@ static void draw_slider (layout_info* layout, int width, int height, lc_color co
 	handle_rect.x = rect.x + ((value_in_bytes * (width - handle_rect.width)) / max_value_in_bytes);
 	handle_rect.y = rect.y;
 
-	// draw_outline (handle_rect);
-
 	opengl_rect (handle_rect, handle_color);
 }
 
-static void draw_color_swatch (layout_info* layout, int width, int height, lc_color color) {
+static void draw_color_swatch (layout_info* layout, int width, int height, lc_color color, bool is_selected) {
 	lc_rect rect = { };
 	rect.width = width;
 	rect.height = height;
@@ -220,6 +248,17 @@ static void draw_color_swatch (layout_info* layout, int width, int height, lc_co
 	draw_outline (rect);
 
 	opengl_rect (rect, color);
+
+	if (is_selected) {
+		lc_color highlight_color = make_colorb (255, 255, 255);
+		lc_rect highlight_rect = { };
+		highlight_rect.width = rect.width;
+		highlight_rect.height = rect.height / 4;
+		highlight_rect.x = rect.x;
+		highlight_rect.y = highlight_rect.height;
+
+		opengl_rect (highlight_rect, highlight_color);
+	}
 }
 
 void app_init (lc_memory* memory, platform_api platform, int client_width, int client_height) {
@@ -227,7 +266,6 @@ void app_init (lc_memory* memory, platform_api platform, int client_width, int c
 	app -> platform = platform;
 
 	app -> platform.log ("Initializing application...");
-
 	app -> current_color = make_colorb (DEFAULT_COLOR);
 	app -> current_component = &app -> current_color.r;
 	app -> current_component_index = 0;
@@ -241,7 +279,6 @@ void app_init (lc_memory* memory, platform_api platform, int client_width, int c
 	sprintf_s (app -> color_library_file.path, PATH_MAX, "%s", "D:/test_color_library.lclib");
 	app -> color_library_file.handle = app -> platform.open_file ("D:/test_color_library.lclib");
 
-
 	if (app -> color_library_file.handle) {
 		app -> platform.log ("Color library file was successfully opened.");
 		app -> platform.log ("Loading color library...");
@@ -250,6 +287,8 @@ void app_init (lc_memory* memory, platform_api platform, int client_width, int c
 	}
 	else
 		app -> platform.log ("Error opening the color library file.");
+
+	app -> current_swatch_index = -1;
 }
 
 void app_update (lc_memory* memory, lc_input input) {
@@ -292,8 +331,12 @@ void app_update (lc_memory* memory, lc_input input) {
 	layout_space (&layout, 23);
 
 	layout_begin_horizontal_group (&layout); {
-		for (int i = 0; i < app -> color_swatches.count; ++i)
-			draw_color_swatch (&layout, SWATCH_WIDTH, SWATCH_HEIGHT, app -> color_swatches.colors[i]);
+		for (int i = 0; i < app -> color_swatches.count; ++i) {
+			draw_color_swatch (&layout, SWATCH_WIDTH, 
+							   SWATCH_HEIGHT, 
+							   app -> color_swatches.colors[i], 
+							   app -> current_swatch_index == i);
+		}
 	}
 	layout_end_horizontal_group (&layout, SWATCH_HEIGHT);
 }

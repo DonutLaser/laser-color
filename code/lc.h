@@ -32,6 +32,7 @@ struct lc_app {
 	lc_color current_color;
 	float* current_component;
 	int current_component_index;
+	int current_swatch_index;
 
 	lc_file color_library_file;
 	lc_color_library color_swatches;
