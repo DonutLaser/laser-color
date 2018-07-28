@@ -35,6 +35,7 @@
 #define KEY_L 		0x4C
 #define KEY_K		0x4B
 #define KEY_R 		0x52
+#define KEY_U 		0x55
 #define KEY_W		0x57
 #define KEY_X 		0x58
 
@@ -101,6 +102,10 @@ static void remove_selected_swatch (lc_app* app) {
 
 	--app -> color_swatches.count;
 	change_color_swatch (app, D_DECREASE);
+}
+
+static void make_selected_swatch_current_color (lc_app* app) {
+	app -> current_color = app -> color_swatches.colors[app -> current_swatch_index];
 }
 
 static bool add_color_to_color_library (lc_app* app, lc_color color) {
@@ -224,6 +229,10 @@ static void handle_input (lc_app* app, lc_input input) {
 		}
 		case KEY_X: {
 			remove_selected_swatch (app);
+			break;
+		}
+		case KEY_U: {
+			make_selected_swatch_current_color (app);
 			break;
 		}
 	}
