@@ -282,6 +282,8 @@ void app_update (lc_memory* memory, lc_input input) {
 	layout_auto_position (&layout, &color_rect);
 	opengl_rect (color_rect, color);
 
+	layout_space (&layout);
+
 	int slider_width = app -> client_width - (2 * HORIZONTAL_PADDING);
 	draw_slider (&layout, slider_width, SLIDER_HEIGHT, make_colorb (255, 0, 0), 1.0f, app -> current_color.r,
 				 app -> current_component == CC_R);
