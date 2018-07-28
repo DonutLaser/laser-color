@@ -78,26 +78,6 @@ static void platform_log (const char* format, ...) {
 	va_end (arguments);
 }
 
-// static laser_rect RECT_to_laser_rect (RECT rect) {
-// 	laser_rect new_rect = { };
-// 	new_rect.x = rect.left;
-// 	new_rect.y = rect.top;
-// 	new_rect.width = rect.right - rect.left;
-// 	new_rect.height = rect.bottom - rect.top;
-
-// 	return new_rect;
-// }
-
-// static RECT laser_rect_to_RECT (laser_rect rect) {
-// 	RECT new_rect = { };
-// 	new_rect.left = rect.x;
-// 	new_rect.top = rect.y;
-// 	new_rect.right = rect.x + rect.width;
-// 	new_rect.bottom = rect.y + rect.height;
-
-// 	return new_rect;
-// }
-
 static bool initialize_open_gl (HWND window, int client_width, int client_height) {
 	HDC device_context = GetDC (window);
 	PIXELFORMATDESCRIPTOR format = { };
