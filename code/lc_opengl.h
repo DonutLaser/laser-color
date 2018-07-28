@@ -3,7 +3,7 @@
 
 // Forward declarations
 struct lc_rect;
-struct lc_color;
+union lc_color;
 
 void opengl_set_screenspace (int width, int heigth);
 void opengl_clear (int width, int height, lc_color color);

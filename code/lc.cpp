@@ -145,12 +145,11 @@ static void load_color_library (lc_app* app) {
 
 static void handle_input (lc_app* app, lc_input input) {
 	switch (input.key) {
-		case KEY_J: {
-			app -> current_component = (color_component)(clamp_value ((int)app -> current_component + 1, 0, CC_B));
-			break;
-		}
+		case KEY_J: 
 		case KEY_K: {
-			app -> current_component = (color_component)(clamp_value (app -> current_component - 1, 0, CC_B));
+			int index = clamp_value (app -> current_component_index + (input.key == KEY_J ? 1 : -1), 0, 2);
+			app -> current_component = &app -> current_color.rgb[index];
+			app -> current_component_index = index;
 			break;
 		}
 		case KEY_N: {
@@ -165,29 +164,13 @@ static void handle_input (lc_app* app, lc_input input) {
 		}
 		case KEY_ALPHA_0: {
 			// Switch it from 0 to 255 and vice versa
-			float* component;
-			if (app -> current_component == CC_R)
-				component = &app -> current_color.r;
-			else if (app -> current_component == CC_G)
-				component = &app -> current_color.g;
-			else
-				component = &app -> current_color.b;
-
-			toggle_color_component (component);	
+			toggle_color_component (app -> current_component);	
 			break;
 		}
 		case KEY_H:
 		case KEY_L: {
 			float amount = input.modifier & M_SHIFT ? MEDIUM_STEP : SINGLE_STEP;
-			float* component;
-			if (app -> current_component == CC_R)
-				component = &app -> current_color.r;
-			else if (app -> current_component == CC_G)
-				component = &app -> current_color.g;
-			else
-				component = &app -> current_color.b;
-
-			change_color_component_value (component, amount,
+			change_color_component_value (app -> current_component, amount,
 										  input.key == KEY_H ? D_DECREASE : D_INCREASE);
 		}
 	}
@@ -252,7 +235,8 @@ void app_init (lc_memory* memory, platform_api platform, int client_width, int c
 	app -> platform.log ("Initializing application...\n");
 
 	app -> current_color = make_colorb (DEFAULT_COLOR);
-	app -> current_component = CC_R;
+	app -> current_component = &app -> current_color.r;
+	app -> current_component_index = 0;
 
 	app -> client_width = client_width;
 	app -> client_height = client_height;
@@ -305,11 +289,11 @@ void app_update (lc_memory* memory, lc_input input) {
 
 	int slider_width = app -> client_width - (2 * HORIZONTAL_PADDING);
 	draw_slider (&layout, slider_width, SLIDER_HEIGHT, make_colorb (255, 0, 0), 1.0f, app -> current_color.r,
-				 app -> current_component == CC_R);
+				 app -> current_component == &app -> current_color.r);
 	draw_slider (&layout, slider_width, SLIDER_HEIGHT, make_colorb (0, 255, 0), 1.0f, app -> current_color.g,
-				 app -> current_component == CC_G);
+				 app -> current_component == &app -> current_color.g);
 	draw_slider (&layout, slider_width, SLIDER_HEIGHT, make_colorb (0, 0, 225), 1.0f, app -> current_color.b,
-				 app -> current_component == CC_B);
+				 app -> current_component == &app -> current_color.b);
 
 	layout_space (&layout, 23);
 

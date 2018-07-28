@@ -10,10 +10,14 @@ struct lc_rect {
 	int height;
 };
 
-struct lc_color {
-	float r;
-	float g;
-	float b;
+union lc_color {
+	struct {
+		float r;
+		float g;
+		float b;
+	};
+
+	float rgb[3];
 };
 
 lc_color make_colorf (float r, float g, float b);

@@ -10,7 +10,6 @@
 struct lc_memory;
 
 enum input_modifier { M_CTRL = 0x01, M_SHIFT = 0x02, M_ALT = 0x04, M_CAPS = 0x08, M_NONE = 0x00 };
-enum color_component { CC_R, CC_G, CC_B };
 
 struct lc_file {
 	void* handle;
@@ -31,7 +30,8 @@ struct lc_app {
 	int client_width, client_height;
 
 	lc_color current_color;
-	color_component current_component;
+	float* current_component;
+	int current_component_index;
 
 	lc_file color_library_file;
 	lc_color_library color_swatches;
