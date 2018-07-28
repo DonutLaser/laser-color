@@ -34,6 +34,7 @@
 #define KEY_I 		0x49
 #define KEY_W		0x57
 #define KEY_B 		0x42
+#define KEY_R 		0x52
 #define KEY_ALPHA_0 0x30
 
 #define SINGLE_STEP 0.00392f // 1/255
@@ -87,6 +88,10 @@ static void change_color_swatch (lc_app* app, change_direction direction, bool s
 		app -> current_swatch_index = app -> color_swatches.count - 1;
 
 	app -> current_color = app -> color_swatches.colors[app -> current_swatch_index];
+}
+
+static void replace_current_swatch (lc_app* app) {
+	app -> color_swatches.colors[app -> current_swatch_index] = app -> current_color;
 }
 
 static bool add_color_to_color_library (lc_app* app, lc_color color) {
@@ -195,6 +200,10 @@ static void handle_input (lc_app* app, lc_input input) {
 		case KEY_W:
 		case KEY_B: {
 			change_color_swatch (app, input.key == KEY_W ? D_INCREASE : D_DECREASE);
+			break;
+		}
+		case KEY_R: {
+			replace_current_swatch (app);
 			break;
 		}
 	}
