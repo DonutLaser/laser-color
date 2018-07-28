@@ -28,13 +28,12 @@
 #define HIGHLIGHT_COLOR 170, 170, 170
 #define HANDLE_COLOR 220, 220, 220
 
-#define KEY_COMMA 	0xBC
-#define KEY_POINT 	0xBE
+#define KEY_H 		0x48
 #define KEY_J		0x4A
 #define KEY_K		0x4B
+#define KEY_L 		0x4C
 #define KEY_N 		0x4E
 #define KEY_ALPHA_0 0x30
-#define KEY_ALPHA_4 0x34
 
 #define SINGLE_STEP 0.00392f // 1/255
 #define MEDIUM_STEP 0.0392f  // 10/255
@@ -60,16 +59,13 @@ static byte string_to_byte (char* str) {
 	return result;
 }
 
-static void change_color_component_value (lc_app* app, float amount, change_direction direction) {
-	float* component;
-	if (app -> current_component == CC_R)
-		component = &app -> current_color.r;
-	else if (app -> current_component == CC_G)
-		component = &app -> current_color.g;
-	else
-		component = &app -> current_color.b;
-
+static void change_color_component_value (float* component, float amount, change_direction direction) {
 	*component = clamp_value (*component + ((int)direction * amount), 0.0f, 1.0f);
+}
+
+static void toggle_color_component (float* component) {
+	change_color_component_value (component, FULL_STEP, 
+								  (*component >= 0.5f) ? D_DECREASE :  D_INCREASE);
 }
 
 static bool add_color_to_color_library (lc_color_library* swatches, lc_color color) {
@@ -168,28 +164,31 @@ static void handle_input (lc_app* app, lc_input input) {
 			break;
 		}
 		case KEY_ALPHA_0: {
-			change_color_component_value (app, FULL_STEP, D_DECREASE);
+			// Switch it from 0 to 255 and vice versa
+			float* component;
+			if (app -> current_component == CC_R)
+				component = &app -> current_color.r;
+			else if (app -> current_component == CC_G)
+				component = &app -> current_color.g;
+			else
+				component = &app -> current_color.b;
+
+			toggle_color_component (component);	
 			break;
 		}
-		case KEY_ALPHA_4: {
-			if (input.modifier & M_SHIFT)
-				change_color_component_value (app, FULL_STEP, D_INCREASE);
+		case KEY_H:
+		case KEY_L: {
+			float amount = input.modifier & M_SHIFT ? MEDIUM_STEP : SINGLE_STEP;
+			float* component;
+			if (app -> current_component == CC_R)
+				component = &app -> current_color.r;
+			else if (app -> current_component == CC_G)
+				component = &app -> current_color.g;
+			else
+				component = &app -> current_color.b;
 
-			break;
-		}
-		case KEY_COMMA: {
-			change_color_component_value (app, 
-										 (input.modifier & M_SHIFT ? MEDIUM_STEP : SINGLE_STEP), 
-										 D_DECREASE);
-
-			break;
-		}
-		case KEY_POINT: {
-			change_color_component_value (app, 
-										 (input.modifier & M_SHIFT ? MEDIUM_STEP : SINGLE_STEP), 
-										 D_INCREASE);
-
-			break;
+			change_color_component_value (component, amount,
+										  input.key == KEY_H ? D_DECREASE : D_INCREASE);
 		}
 	}
 }
