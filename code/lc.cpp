@@ -32,7 +32,7 @@
 #define KEY_J		0x4A
 #define KEY_K		0x4B
 #define KEY_L 		0x4C
-#define KEY_N 		0x4E
+#define KEY_I 		0x49
 #define KEY_ALPHA_0 0x30
 
 #define SINGLE_STEP 0.00392f // 1/255
@@ -148,14 +148,12 @@ static void handle_input (lc_app* app, lc_input input) {
 			app -> current_component_index = index;
 			break;
 		}
-		case KEY_N: {
-			if (input.modifier & M_CTRL) {
-				if (add_color_to_color_library (&app -> color_swatches, app -> current_color))
-					app -> platform.log ("Successfully added new color to the library.");
-				else
-					app -> platform.log ("New color could not be added to the library. Library is full.");
-			}
-
+		case KEY_I: {
+			if (add_color_to_color_library (&app -> color_swatches, app -> current_color))
+				app -> platform.log ("Successfully added new color to the library.");
+			else
+				app -> platform.log ("New color could not be added to the library. Library is full.");
+			
 			break;
 		}
 		case KEY_ALPHA_0: {
