@@ -39,6 +39,21 @@
 
 enum change_direction { D_INCREASE = 1, D_DECREASE = -1 };
 
+static byte string_to_byte (char* str) {
+	byte result = 0;
+	int multiplier = 100;
+
+	for (int i = 0; i < 3; ++i) {
+		if (str[i] == '\0')
+			break;
+
+		result += (str[i] - 0x30) * multiplier;
+		multiplier /= 10;
+	}
+
+	return result;
+}
+
 static void change_color_component_value (lc_app* app, float amount, change_direction direction) {
 	float* component;
 	if (app -> current_component == CC_R)
@@ -85,32 +100,37 @@ static void save_color_library (lc_app* app) {
 
 static void load_color_library (lc_app* app) {
 	char* buffer;
-
-	int digitCount = 0;
-	byte component = 0;
-	int component_index = 0;
-	byte rgb[3] = { 0, 0, 0 };
-
 	if (app -> platform.read_file (app -> color_library_file.handle, &buffer)) {
+		char component[4];
+		int current_char = 0;
+		byte rgb[3];
+		int current_component = 0;
+
 		while (*buffer != '\0') {
 			if (*buffer == ' ') {
-				rgb[component_index++] = component;
-				component = 0;
-				digitCount = 0;
+				component[current_char] = '\0';
+				app -> platform.log ("Parsed string %s\n", component);
+				byte value = string_to_byte (component); 
+				app -> platform.log ("Value: %d\n", value);
+				rgb[current_component++] = value;
+
+				current_char = 0;
 			}
 			else if (*buffer == '\n') {
-				rgb[component_index++] = component;
-				component = 0;
-				digitCount = 0;
-				component_index = 0;
+				component[current_char] = '\0';
+				app -> platform.log ("Parsed string %s\n", component);
+				byte value = string_to_byte (component);
+				app -> platform.log ("Value: %d\n", value);
+				rgb[current_component] = value;
 
 				add_color_to_color_library (&app -> color_swatches, 
-												make_colorb (rgb[0], rgb[1], rgb[2]));
+											make_colorb (rgb[0], rgb[1], rgb[2]));
+
+				current_char = 0;
+				current_component = 0;
 			}
-			else {
-				component += (*buffer - 0x30) * (10 * digitCount);
-				++digitCount;
-			}
+			else
+				component[current_char++] = *buffer;
 
 			++buffer;
 		}

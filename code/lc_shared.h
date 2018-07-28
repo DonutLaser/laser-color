@@ -19,6 +19,6 @@ struct lc_color {
 lc_color make_colorf (float r, float g, float b);
 lc_color make_colorb (byte r, byte g, byte b);
 
-byte color_component_f2bd (float value);
+byte color_component_f2b (float value);
 
 #endif
