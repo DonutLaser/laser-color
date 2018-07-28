@@ -13,13 +13,19 @@
 
 #define HORIZONTAL_PADDING 10 
 #define VERTICAL_PADDING 5 
+
 #define SLIDER_HEIGHT 15 
 #define SLIDER_HANDLE_WIDTH 8
 #define SWATCH_HEIGHT 15
 #define SWATCH_WIDTH 15
+#define SWATCH_AREA_HEIGHT 35
+#define OUTLINE_WIDTH 1
+
 #define CLEAR_COLOR 200, 200, 200
+#define SWATCH_AREA_COLOR 170, 170, 170
+#define OUTLINE_COLOR 80, 80, 80
 #define DEFAULT_COLOR 255, 255, 255 
-#define HIGHLIGHT_COLOR 160, 160, 160
+#define HIGHLIGHT_COLOR 170, 170, 170
 #define HANDLE_COLOR 220, 220, 220
 
 #define KEY_COMMA 	0xBC
@@ -188,6 +194,17 @@ static void handle_input (lc_app* app, lc_input input) {
 	}
 }
 
+static void draw_outline (lc_rect rect) {
+	lc_color color = make_colorb (OUTLINE_COLOR);
+	lc_rect outline_rect = { };
+	outline_rect.width = rect.width + (OUTLINE_WIDTH* 2);
+	outline_rect.height = rect.height + (OUTLINE_WIDTH * 2);
+	outline_rect.x = rect.x - OUTLINE_WIDTH;
+	outline_rect.y = rect.y + OUTLINE_WIDTH;
+
+	opengl_rect (outline_rect, color);
+}
+
 static void draw_slider (layout_info* layout, int width, int height, lc_color color, float max_value, float value, bool is_selected) {
 	// Calculate the slider rect
 	lc_rect rect = { };
@@ -195,18 +212,9 @@ static void draw_slider (layout_info* layout, int width, int height, lc_color co
 	rect.height = height;
 	layout_auto_position (layout, &rect);
 
-	// Draw the highlight if selected
-	if (is_selected) {
-		lc_color highlight_color = make_colorb (HIGHLIGHT_COLOR);
-
-		// Find a way to position the highlight via layout methods 
-		lc_rect highlight_rect = { };
-		highlight_rect.y = rect.y + VERTICAL_PADDING;	
-		highlight_rect.width = width + (2 * HORIZONTAL_PADDING);
-		highlight_rect.height = height + (2 * VERTICAL_PADDING);
-
-		opengl_rect (highlight_rect, highlight_color);
-	}
+	// Draw the outline if selected
+	if (is_selected)
+		draw_outline (rect);
 
 	// Draw slider
 	opengl_rect (rect, color);
@@ -222,6 +230,8 @@ static void draw_slider (layout_info* layout, int width, int height, lc_color co
 	handle_rect.x = rect.x + ((value_in_bytes * (width - handle_rect.width)) / max_value_in_bytes);
 	handle_rect.y = rect.y;
 
+	// draw_outline (handle_rect);
+
 	opengl_rect (handle_rect, handle_color);
 }
 
@@ -230,6 +240,8 @@ static void draw_color_swatch (layout_info* layout, int width, int height, lc_co
 	rect.width = width;
 	rect.height = height;
 	layout_auto_position (layout, &rect);
+
+	draw_outline (rect);
 
 	opengl_rect (rect, color);
 }
@@ -274,6 +286,14 @@ void app_update (lc_memory* memory, lc_input input) {
 	lc_color clear_color = make_colorb (CLEAR_COLOR);
 	opengl_clear (app -> client_width, app -> client_height, clear_color);
 
+	lc_color swatch_area_color = make_colorb (SWATCH_AREA_COLOR);
+	lc_rect swatch_area_rect = { };
+	swatch_area_rect.width = app -> client_width;
+	swatch_area_rect.height = SWATCH_AREA_HEIGHT;
+	swatch_area_rect.x = 0;
+	swatch_area_rect.y = SWATCH_AREA_HEIGHT;
+	opengl_rect (swatch_area_rect, swatch_area_color);
+
 	// (0,0) is bottom left, (width, height) is top right 
 	lc_color color = app -> current_color;
 	lc_rect color_rect = { };
@@ -292,7 +312,7 @@ void app_update (lc_memory* memory, lc_input input) {
 	draw_slider (&layout, slider_width, SLIDER_HEIGHT, make_colorb (0, 0, 225), 1.0f, app -> current_color.b,
 				 app -> current_component == CC_B);
 
-	layout_space (&layout);
+	layout_space (&layout, 23);
 
 	layout_begin_horizontal_group (&layout); {
 		for (int i = 0; i < app -> color_swatches.count; ++i)
