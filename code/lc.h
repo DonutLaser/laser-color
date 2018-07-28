@@ -4,7 +4,7 @@
 #include "lc_shared.h"
 #include "lc_platform.h"
 
-#define MAX_COLORS_IN_LIBRARY 8
+#define MAX_COLORS_IN_LIBRARY 11 
 
 // Forward declarations
 struct lc_memory;
