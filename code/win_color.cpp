@@ -8,7 +8,7 @@
 #include "lc_opengl.h"
 
 #define WINDOW_HEIGHT 256 
-#define WINDOW_WIDTH  320
+#define WINDOW_WIDTH  302
 
 #define Kilobytes(x) ((x * 1024))
 #define Megabytes(x) ((Kilobytes(x) * 1024))
