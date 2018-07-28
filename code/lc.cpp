@@ -27,15 +27,16 @@
 #define DEFAULT_COLOR 255, 255, 255 
 #define HANDLE_COLOR 220, 220, 220
 
-#define KEY_H 		0x48
-#define KEY_J		0x4A
-#define KEY_K		0x4B
-#define KEY_L 		0x4C
-#define KEY_I 		0x49
-#define KEY_W		0x57
-#define KEY_B 		0x42
-#define KEY_R 		0x52
 #define KEY_ALPHA_0 0x30
+#define KEY_B 		0x42
+#define KEY_H 		0x48
+#define KEY_I 		0x49
+#define KEY_J		0x4A
+#define KEY_L 		0x4C
+#define KEY_K		0x4B
+#define KEY_R 		0x52
+#define KEY_W		0x57
+#define KEY_X 		0x58
 
 #define SINGLE_STEP 0.00392f // 1/255
 #define MEDIUM_STEP 0.0392f  // 10/255
@@ -90,8 +91,16 @@ static void change_color_swatch (lc_app* app, change_direction direction, bool s
 	app -> current_color = app -> color_swatches.colors[app -> current_swatch_index];
 }
 
-static void replace_current_swatch (lc_app* app) {
+static void replace_selected_swatch (lc_app* app) {
 	app -> color_swatches.colors[app -> current_swatch_index] = app -> current_color;
+}
+
+static void remove_selected_swatch (lc_app* app) {
+	for (int i = app -> current_swatch_index; i < app -> color_swatches.count - 1; ++i)
+		app -> color_swatches.colors[i] = app -> color_swatches.colors[i + 1];
+
+	--app -> color_swatches.count;
+	change_color_swatch (app, D_DECREASE);
 }
 
 static bool add_color_to_color_library (lc_app* app, lc_color color) {
@@ -111,7 +120,13 @@ static void save_color_library (lc_app* app) {
 	
 	int bytes_written = 0;
 
-	app -> platform.log ("Found %d colors in the library. Saving... ", app -> color_swatches.count);
+	app -> platform.log ("Found %d colors in the library", app -> color_swatches.count);
+	if (app -> color_swatches.count == 0) {
+		app -> platform.log (" ");
+		return;
+	}
+	else
+		app -> platform.log (".Saving...");
 
 	for (int i = 0; i < app -> color_swatches.count; ++i) {
 		byte r = color_component_f2b (app -> color_swatches.colors[i].r);
@@ -161,7 +176,8 @@ static void load_color_library (lc_app* app) {
 			++buffer;
 		}
 
-		app -> platform.log ("Successfully added %d colors to the library", app -> color_swatches.count);
+		if (app -> color_swatches.count != 0)
+			app -> platform.log ("Successfully added %d colors to the library", app -> color_swatches.count);
 	}
 	else
 		app -> platform.log ("Could not read the color library file.");
@@ -203,7 +219,11 @@ static void handle_input (lc_app* app, lc_input input) {
 			break;
 		}
 		case KEY_R: {
-			replace_current_swatch (app);
+			replace_selected_swatch (app);
+			break;
+		}
+		case KEY_X: {
+			remove_selected_swatch (app);
 			break;
 		}
 	}
