@@ -19,12 +19,16 @@ typedef CLOSE_FILE(close_file);
 #define LOG(name) void name(const char* format, ...)
 typedef LOG(log);
 
+#define COPY_TO_CLIPBOARD(name) void name(const char* text)
+typedef COPY_TO_CLIPBOARD(copy_to_clipboard);
+
 struct platform_api {
 	open_file* 	open_file;
 	write_file* write_file;	
 	read_file*	read_file;
 	close_file* close_file;
 	log*		log;
+	copy_to_clipboard* copy_to_clipboard;
 };
 
 #endif

@@ -29,6 +29,8 @@
 
 #define KEY_ALPHA_0 0x30
 #define KEY_B 		0x42
+#define KEY_D		0x44
+#define KEY_F		0x46
 #define KEY_H 		0x48
 #define KEY_I 		0x49
 #define KEY_J		0x4A
@@ -47,6 +49,7 @@
 #define BUFFER_SIZE 4096
 
 enum change_direction { D_INCREASE = 1, D_DECREASE = -1 };
+enum color_conversion_format { CF_BYTE, CF_FLOAT, CF_HEX };
 
 static byte string_to_byte (char* str) {
 	byte result = 0;
@@ -61,6 +64,29 @@ static byte string_to_byte (char* str) {
 	}
 
 	return result;
+}
+
+static void copy_color_to_clipboard (lc_app* app, const char* format, lc_color color, color_conversion_format conversion) {
+	int buffer_size;
+	if (conversion == CF_BYTE)
+		buffer_size = 14;
+	else if (conversion == CF_FLOAT)
+		buffer_size = 17;
+	else
+		buffer_size = 8;
+
+	char* buffer = (char*)malloc (sizeof (char) * buffer_size);
+	if (conversion == CF_BYTE || conversion == CF_HEX) {
+		sprintf_s (buffer, buffer_size, format, 
+			   	   (int)(color.r * 255),
+			   	   (int)(color.g * 255),
+			   	   (int)(color.b * 255));
+	}
+	else if (conversion == CF_FLOAT)
+		sprintf_s (buffer, buffer_size, format, color.r, color.g, color.b);
+
+	app -> platform.copy_to_clipboard (buffer);
+	app -> platform.log ("Copied '%s' into the clipboard.", buffer);
 }
 
 static void change_color_component_value (float* component, float amount, change_direction direction) {
@@ -133,7 +159,7 @@ static void save_color_library (lc_app* app) {
 		return;
 	}
 	else
-		app -> platform.log (".Saving...");
+		app -> platform.log ("Saving...");
 
 	for (int i = 0; i < app -> color_swatches.count; ++i) {
 		byte r = color_component_f2b (app -> color_swatches.colors[i].r);
@@ -230,11 +256,29 @@ static void handle_input (lc_app* app, lc_input input) {
 			break;
 		}
 		case KEY_X: {
-			remove_selected_swatch (app);
+			if (input.modifier & M_CTRL)
+				copy_color_to_clipboard (app, "#%.2x%.2x%.2x\0", app -> current_color, CF_HEX);
+			else
+				remove_selected_swatch (app);
+
 			break;
 		}
 		case KEY_U: {
 			make_selected_swatch_current_color (app);
+			break;
+		}
+		case KEY_D: {
+			if (!(input.modifier & M_CTRL)) 
+				return;
+
+			copy_color_to_clipboard (app, "%d, %d, %d\0", app -> current_color, CF_BYTE);
+			break;
+		}
+		case KEY_F: {
+			if (!(input.modifier & M_CTRL)) 
+				return;
+
+			copy_color_to_clipboard (app, "%.1ff, %.1ff, %.1ff\0", app -> current_color, CF_FLOAT);
 			break;
 		}
 	}

@@ -17,6 +17,16 @@
 // Get rid of these globals someday 
 static HANDLE global_log_file;
 
+static int string_length (const char* str) {
+	int result = 0;
+	while (*str != '\0') {
+		++result;
+		++str;
+	}
+
+	return result;
+}
+
 static HANDLE platform_open_file (const char* file_name) {
 	HANDLE file_handle = CreateFile (file_name, GENERIC_READ | GENERIC_WRITE,
 									 FILE_SHARE_READ, NULL, 
@@ -77,6 +87,24 @@ static void platform_log (const char* format, ...) {
 		platform_write_file (global_log_file, message, bytes_written, WM_APPEND);
 
 	va_end (arguments);
+}
+
+static void platform_copy_to_clipboard (const char* text) {
+	int size = string_length (text) + 1;
+
+	HANDLE clipboard_memory_handle = GlobalAlloc (GMEM_MOVEABLE, size);
+	void* memory = GlobalLock (clipboard_memory_handle);
+
+	for (int i = 0; i < size; ++i)
+		((char*)memory)[i] = text[i];
+
+	GlobalUnlock (clipboard_memory_handle);
+
+	OpenClipboard (0); {
+		EmptyClipboard ();
+		SetClipboardData (CF_TEXT, clipboard_memory_handle);
+	}
+	CloseClipboard ();
 }
 
 static bool initialize_open_gl (HWND window, int client_width, int client_height) {
@@ -182,6 +210,7 @@ int CALLBACK WinMain (HINSTANCE hInstance, HINSTANCE prevInstance,
 			api.read_file = platform_read_file;
 			api.close_file = platform_close_file;
 			api.log = platform_log;
+			api.copy_to_clipboard = platform_copy_to_clipboard;
 
 			app_init (&app_memory, api, client_width, client_height);
 
