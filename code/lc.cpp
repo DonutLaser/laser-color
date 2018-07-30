@@ -101,7 +101,9 @@ static void remove_selected_swatch (lc_app* app) {
 		app -> color_swatches.colors[i] = app -> color_swatches.colors[i + 1];
 
 	--app -> color_swatches.count;
-	change_color_swatch (app, D_DECREASE);
+
+	if (app -> current_swatch_index == app -> color_swatches.count)
+		change_color_swatch (app, D_DECREASE);
 }
 
 static void make_selected_swatch_current_color (lc_app* app) {
