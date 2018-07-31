@@ -114,7 +114,7 @@ static void change_color_swatch (lc_app* app, change_direction direction, bool s
 	app -> current_swatch_index += (int)direction;
 	if (app -> current_swatch_index == app -> color_swatches.count)
 		app -> current_swatch_index = 0;
-	else if (app -> current_swatch_index == -1)
+	else if (app -> current_swatch_index < 0)
 		app -> current_swatch_index = app -> color_swatches.count - 1;
 
 	app -> current_color = app -> color_swatches.colors[app -> current_swatch_index];
