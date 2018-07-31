@@ -26,6 +26,7 @@
 #define OUTLINE_COLOR 80, 80, 80
 #define DEFAULT_COLOR 255, 255, 255 
 #define HANDLE_COLOR 220, 220, 220
+#define DIRTY_COLOR 255, 70, 70
 
 #define KEY_ALPHA_0 0x30
 #define KEY_B 		0x42
@@ -37,6 +38,7 @@
 #define KEY_L 		0x4C
 #define KEY_K		0x4B
 #define KEY_R 		0x52
+#define KEY_S 		0x53
 #define KEY_U 		0x55
 #define KEY_W		0x57
 #define KEY_X 		0x58
@@ -226,8 +228,10 @@ static void handle_input (lc_app* app, lc_input input) {
 			break;
 		}
 		case KEY_I: {
-			if (add_color_to_color_library (app, app -> current_color))
+			if (add_color_to_color_library (app, app -> current_color)) {
+				app -> color_library_is_dirty = true;
 				app -> platform.log ("Successfully added new color to the library.");
+			}
 			else
 				app -> platform.log ("New color could not be added to the library. Library is full.");
 
@@ -253,13 +257,16 @@ static void handle_input (lc_app* app, lc_input input) {
 		}
 		case KEY_R: {
 			replace_selected_swatch (app);
+			app -> color_library_is_dirty = true;
 			break;
 		}
 		case KEY_X: {
 			if (input.modifier & M_CTRL)
 				copy_color_to_clipboard (app, "#%.2x%.2x%.2x\0", app -> current_color, CF_HEX);
-			else
+			else {
 				remove_selected_swatch (app);
+				app -> color_library_is_dirty = true;
+			}
 
 			break;
 		}
@@ -279,6 +286,16 @@ static void handle_input (lc_app* app, lc_input input) {
 				return;
 
 			copy_color_to_clipboard (app, "%.1ff, %.1ff, %.1ff\0", app -> current_color, CF_FLOAT);
+			break;
+		}
+		case KEY_S: { 
+			if (input.modifier & M_CTRL) {
+				if (app -> color_library_is_dirty) {
+					save_color_library (app);
+					app -> color_library_is_dirty = false;
+				}
+			}
+
 			break;
 		}
 	}
@@ -393,6 +410,17 @@ void app_update (lc_memory* memory, lc_input input) {
 	swatch_area_rect.y = SWATCH_AREA_HEIGHT;
 	opengl_rect (swatch_area_rect, swatch_area_color);
 
+	if (app -> color_library_is_dirty) {
+		lc_color dirty_color = make_colorb (DIRTY_COLOR);
+		lc_rect dirty_rect = { };
+		dirty_rect.width = SWATCH_WIDTH / 3;
+		dirty_rect.height = SWATCH_HEIGHT + (OUTLINE_WIDTH * 2);
+		dirty_rect.x = 0;
+		dirty_rect.y = SWATCH_AREA_HEIGHT - ((SWATCH_AREA_HEIGHT - SWATCH_HEIGHT) / 2) + OUTLINE_WIDTH;
+
+		opengl_rect (dirty_rect, dirty_color);
+	}
+
 	// (0,0) is bottom left, (width, height) is top right 
 	lc_color color = app -> current_color;
 	lc_rect color_rect = { };
@@ -426,8 +454,6 @@ void app_update (lc_memory* memory, lc_input input) {
 
 void app_close (lc_memory* memory) {
 	lc_app* app = (lc_app*)memory -> storage;
-	
-	save_color_library (app);
 
 	free (app -> color_library_file.path);
 }
