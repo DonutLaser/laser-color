@@ -242,17 +242,17 @@ static void handle_input (lc_app* app, lc_input input) {
 			toggle_color_component (app -> current_component);	
 			break;
 		}
-		case KEY_H:
-		case KEY_L: {
+		case KEY_W:
+		case KEY_B: {
 			float amount = input.modifier & M_SHIFT ? MEDIUM_STEP : SINGLE_STEP;
 			change_color_component_value (app -> current_component, amount,
-										  input.key == KEY_H ? D_DECREASE : D_INCREASE);
+										  input.key == KEY_B ? D_DECREASE : D_INCREASE);
 
 			break;
 		}
-		case KEY_W:
-		case KEY_B: {
-			change_color_swatch (app, input.key == KEY_W ? D_INCREASE : D_DECREASE);
+		case KEY_H:
+		case KEY_L: {
+			change_color_swatch (app, input.key == KEY_L ? D_INCREASE : D_DECREASE);
 			break;
 		}
 		case KEY_R: {
