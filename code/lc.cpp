@@ -284,8 +284,7 @@ static void handle_input (lc_app* app, lc_input input) {
 	}
 }
 
-static void draw_outline (lc_rect rect) {
-	lc_color color = make_colorb (OUTLINE_COLOR);
+static void draw_outline (lc_rect rect, lc_color color) {
 	lc_rect outline_rect = { };
 	outline_rect.width = rect.width + (OUTLINE_WIDTH* 2);
 	outline_rect.height = rect.height + (OUTLINE_WIDTH * 2);
@@ -304,7 +303,7 @@ static void draw_slider (layout_info* layout, int width, int height, lc_color co
 
 	// Draw the outline if selected
 	if (is_selected)
-		draw_outline (rect);
+		draw_outline (rect, make_colorb (OUTLINE_COLOR));
 
 	// Draw slider
 	opengl_rect (rect, color);
@@ -329,7 +328,7 @@ static void draw_color_swatch (layout_info* layout, int width, int height, lc_co
 	rect.height = height;
 	layout_auto_position (layout, &rect);
 
-	draw_outline (rect);
+	draw_outline (rect, make_colorb (OUTLINE_COLOR));
 
 	opengl_rect (rect, color);
 
