@@ -108,6 +108,7 @@ static void change_color_swatch (lc_app* app, change_direction direction, bool s
 
 	if (switch_to_newly_added_swatch) {
 		app -> current_swatch_index = app -> color_swatches.count - 1;
+		app -> previous_color = app -> current_color;
 		return;
 	}
 
@@ -118,6 +119,7 @@ static void change_color_swatch (lc_app* app, change_direction direction, bool s
 		app -> current_swatch_index = app -> color_swatches.count - 1;
 
 	app -> current_color = app -> color_swatches.colors[app -> current_swatch_index];
+	app -> previous_color = app -> current_color;
 }
 
 static void replace_selected_swatch (lc_app* app) {
@@ -367,6 +369,7 @@ void app_init (lc_memory* memory, platform_api platform, int client_width, int c
 
 	app -> platform.log ("Initializing application...");
 	app -> current_color = make_colorb (DEFAULT_COLOR);
+	app -> previous_color = app -> current_color;
 	app -> current_component = &app -> current_color.r;
 	app -> current_component_index = 0;
 
@@ -424,10 +427,18 @@ void app_update (lc_memory* memory, lc_input input) {
 	// (0,0) is bottom left, (width, height) is top right 
 	lc_color color = app -> current_color;
 	lc_rect color_rect = { };
-	color_rect.width = app -> client_width - (2 * HORIZONTAL_PADDING);
+	color_rect.width = app -> client_width - (app -> client_height / 3) - (2 * HORIZONTAL_PADDING);
 	color_rect.height = app -> client_height / 3;
 	layout_auto_position (&layout, &color_rect);
 	opengl_rect (color_rect, color);
+
+	lc_color previous_color = app -> previous_color;
+	lc_rect previous_color_rect = { };
+	previous_color_rect.width = color_rect.height; 
+	previous_color_rect.height = color_rect.height;
+	previous_color_rect.x = color_rect.width + HORIZONTAL_PADDING;
+	previous_color_rect.y = color_rect.y;
+	opengl_rect (previous_color_rect, previous_color);
 
 	layout_space (&layout);
 

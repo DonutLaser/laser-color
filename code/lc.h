@@ -30,6 +30,7 @@ struct lc_app {
 	int client_width, client_height;
 
 	lc_color current_color;
+	lc_color previous_color;
 	float* current_component;
 	int current_component_index;
 	int current_swatch_index;
