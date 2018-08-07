@@ -47,7 +47,6 @@
 #define MEDIUM_STEP 0.0392f  // 10/255
 #define FULL_STEP 1.0f
 
-#define PATH_MAX 128 
 #define BUFFER_SIZE 4096
 
 enum change_direction { D_INCREASE = 1, D_DECREASE = -1 };
@@ -363,7 +362,7 @@ static void draw_color_swatch (layout_info* layout, int width, int height, lc_co
 	}
 }
 
-void app_init (lc_memory* memory, platform_api platform, int client_width, int client_height) {
+void app_init (lc_memory* memory, platform_api platform, int client_width, int client_height, char* documents) {
 	lc_app* app = (lc_app*)memory -> storage;
 	app -> platform = platform;
 
@@ -379,8 +378,8 @@ void app_init (lc_memory* memory, platform_api platform, int client_width, int c
 	app -> color_swatches = { };
 
 	app -> color_library_file.path = (char*)malloc (sizeof (char) * PATH_MAX);
-	sprintf_s (app -> color_library_file.path, PATH_MAX, "%s", "D:/test_color_library.lclib");
-	app -> color_library_file.handle = app -> platform.open_file ("D:/test_color_library.lclib");
+	sprintf_s (app -> color_library_file.path, PATH_MAX, "%s/%s", documents, "test_color_library.lclib");
+	app -> color_library_file.handle = app -> platform.open_file (app -> color_library_file.path);
 
 	if (app -> color_library_file.handle) {
 		app -> platform.log ("Color library file was successfully opened.");
@@ -392,6 +391,7 @@ void app_init (lc_memory* memory, platform_api platform, int client_width, int c
 		app -> platform.log ("Error opening the color library file.");
 
 	app -> current_swatch_index = -1;
+
 }
 
 void app_update (lc_memory* memory, lc_input input) {

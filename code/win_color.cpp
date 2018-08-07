@@ -1,4 +1,5 @@
 #include <windows.h>
+#include <shlobj.h>
 #include <stdio.h>
 #include <gl/gl.h>
 
@@ -212,7 +213,10 @@ int CALLBACK WinMain (HINSTANCE hInstance, HINSTANCE prevInstance,
 			api.log = platform_log;
 			api.copy_to_clipboard = platform_copy_to_clipboard;
 
-			app_init (&app_memory, api, client_width, client_height);
+			char documents_path[PATH_MAX];
+			SHGetFolderPath (NULL, CSIDL_MYDOCUMENTS, NULL, SHGFP_TYPE_CURRENT, documents_path);
+
+			app_init (&app_memory, api, client_width, client_height, documents_path);
 
 			ShowWindow (window, cmdShow);
 

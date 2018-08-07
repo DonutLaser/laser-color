@@ -4,6 +4,8 @@
 #include "lc_shared.h"
 #include "lc_platform.h"
 
+#define PATH_MAX 128 
+
 #define MAX_COLORS_IN_LIBRARY 11 
 
 // Forward declarations
@@ -42,7 +44,7 @@ struct lc_app {
 	platform_api platform;
 };
 
-void app_init (lc_memory* memory, platform_api platform, int client_width, int client_height);
+void app_init (lc_memory* memory, platform_api platform, int client_width, int client_height, char* documents);
 void app_update (lc_memory* memory, lc_input input);
 void app_close (lc_memory* memory);
 

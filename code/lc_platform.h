@@ -28,6 +28,7 @@ struct platform_api {
 	read_file*	read_file;
 	close_file* close_file;
 	log*		log;
+
 	copy_to_clipboard* copy_to_clipboard;
 };
 
