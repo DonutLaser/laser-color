@@ -161,6 +161,7 @@ int CALLBACK WinMain (HINSTANCE hInstance, HINSTANCE prevInstance,
 	wndClass.style = CS_HREDRAW | CS_OWNDC | CS_VREDRAW;
 	wndClass.lpfnWndProc = window_proc;
 	wndClass.hInstance = hInstance;
+	wndClass.hIcon = LoadIcon (wndClass.hInstance, MAKEINTRESOURCE (101));
 	wndClass.lpszClassName = "Laser Color";
 
 	if (RegisterClass (&wndClass)) {
