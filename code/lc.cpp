@@ -9,6 +9,9 @@
 #include "lc_opengl.h"
 #include "lc_gui_layout.h"
 
+#define STB_IMAGE_IMPLEMENTATION
+#include "../third_party/stb_image.h"
+
 #define clamp_value(x, min, max) (x < min) ? min : ((x > max) ? max : x)
 
 #define HORIZONTAL_PADDING 10 
@@ -181,7 +184,7 @@ static void save_color_library (lc_app* app) {
 
 static void load_color_library (lc_app* app) {
 	char* buffer;
-	if (app -> platform.read_file (app -> color_library_file.handle, &buffer)) {
+	if (app -> platform.read_file (app -> color_library_file.handle, &buffer, NULL)) {
 		char component[4];
 		int current_char = 0;
 		byte rgb[3];
@@ -392,6 +395,22 @@ void app_init (lc_memory* memory, platform_api platform, int client_width, int c
 
 	app -> current_swatch_index = -1;
 
+	// For test purposes only now
+	int n;
+	app -> platform.log ("Loading test_image.png...");
+	app -> image.data = (void*)stbi_load ("W:\\color\\data\\images\\test_image.png",
+										  &app -> image.width,
+										  &app -> image.height,
+										  &n, 0);
+
+	if (app -> image.data) {
+		app -> platform.log ("...Success!\n\tWidth: %d\n\tHeight: %d\n\tChannels: %d", 
+							 app -> image.width,
+							 app -> image.height,
+							 n);
+	}
+	else
+		app -> platform.log ("Unable to load test_image.png");
 }
 
 void app_update (lc_memory* memory, lc_input input) {
@@ -467,4 +486,5 @@ void app_close (lc_memory* memory) {
 	lc_app* app = (lc_app*)memory -> storage;
 
 	free (app -> color_library_file.path);
+	app -> platform.close_file (app -> color_library_file.handle);
 }

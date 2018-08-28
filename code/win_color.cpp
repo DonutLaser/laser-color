@@ -63,13 +63,16 @@ static bool platform_write_file (HANDLE file_handle, const char* text, int size,
 	return success;
 }
 
-static bool platform_read_file (HANDLE file_handle, char** text) {
+static bool platform_read_file (HANDLE file_handle, char** text, unsigned* size) {
 	DWORD file_size	= GetFileSize (file_handle, NULL);
 	*text = (char*)calloc (file_size + 1, sizeof (char));
 
 	DWORD read_bytes;
 	bool success = ReadFile (file_handle, *text, file_size + 1, &read_bytes, NULL);
 	(*text)[file_size] = '\0';
+
+	if (size != NULL)
+		*size = (int)file_size;
 
 	return success;
 }
@@ -132,7 +135,7 @@ static bool initialize_open_gl (HWND window, int client_width, int client_height
 
 	ReleaseDC (window, device_context);
 
-	opengl_set_screenspace (client_width, client_height);
+	opengl_init (client_width, client_height);
 
 	return true;
 }

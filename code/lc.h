@@ -41,6 +41,8 @@ struct lc_app {
 	lc_color_library color_swatches;
 	bool color_library_is_dirty;
 
+	lc_image image;
+
 	platform_api platform;
 };
 

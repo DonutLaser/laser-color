@@ -10,6 +10,13 @@ struct lc_rect {
 	int height;
 };
 
+struct lc_image {
+	int width;
+	int height;
+
+	void* data;
+};
+
 union lc_color {
 	struct {
 		float r;
