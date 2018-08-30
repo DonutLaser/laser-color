@@ -88,4 +88,7 @@ void opengl_rect (lc_rect rect, lc_color color, lc_image image) {
     glVertex2f ((float)rect.x, (float)rect.y - (float)rect.height);
 
     glEnd();
+
+    glBindTexture (GL_TEXTURE_2D, 0);
+    glDisable (GL_TEXTURE_2D);
 }
