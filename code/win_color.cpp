@@ -116,6 +116,7 @@ static bool initialize_open_gl (HWND window, int client_width, int client_height
 	PIXELFORMATDESCRIPTOR format = { };
 	format.nSize = sizeof (format);
 	format.nVersion = 1;
+	format.iPixelType = PFD_TYPE_RGBA;
 	format.dwFlags = PFD_SUPPORT_OPENGL | PFD_DRAW_TO_WINDOW | PFD_DOUBLEBUFFER;
 	format.cColorBits = 32;
 	format.cAlphaBits = 8;

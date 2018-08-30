@@ -4,12 +4,16 @@
 #include <windows.h>
 // #endif
 #include <gl/gl.h>
+#include <stdio.h>
 
 #include "lc_shared.h"
 
 static GLuint texture_handles; // Only one for now
 
 static void opengl_set_screenspace (int width, int height) {
+    glMatrixMode (GL_TEXTURE);
+    glLoadIdentity ();
+
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
 
@@ -26,14 +30,9 @@ static void opengl_set_screenspace (int width, int height) {
 }
 
 void opengl_init (int width, int height) {
-    opengl_set_screenspace (width, height);
+    glGenTextures (1, &texture_handles);
 
-    glGenTextures (3, &texture_handles);
-    glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
-    glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
-    glTexEnvi (GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+    opengl_set_screenspace (width, height);
 }
 
 void opengl_clear (int width, int height, lc_color color) {
@@ -59,13 +58,20 @@ void opengl_rect (lc_rect rect, lc_color color) {
 }
 
 void opengl_rect (lc_rect rect, lc_color color, lc_image image) {
-    glBegin(GL_TRIANGLES);
-
-    glColor4f(color.r, color.g, color.b, 0.0f);
-
     glBindTexture (GL_TEXTURE_2D, texture_handles);
     glTexImage2D (GL_TEXTURE_2D, 0, GL_RGBA8, image.width, image.height, 0, GL_RGBA, GL_UNSIGNED_BYTE, image.data);
+
+    glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
+    glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
+    glTexEnvi (GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+
     glEnable (GL_TEXTURE_2D);
+
+    glBegin(GL_TRIANGLES);
+
+    glColor4f(color.r, color.g, color.b, 1.0f);
 
     glTexCoord2f (0.0f, 0.0f);
     glVertex2f ((float)rect.x, (float)rect.y);
