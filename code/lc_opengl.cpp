@@ -67,6 +67,8 @@ void opengl_rect (lc_rect rect, lc_color color, lc_image image) {
     glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
     glTexEnvi (GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
 
+    glEnable (GL_BLEND);
+    glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glEnable (GL_TEXTURE_2D);
 
     glBegin(GL_TRIANGLES);
@@ -88,6 +90,8 @@ void opengl_rect (lc_rect rect, lc_color color, lc_image image) {
     glVertex2f ((float)rect.x, (float)rect.y - (float)rect.height);
 
     glEnd();
+
+    glDisable (GL_BLEND);
 
     glBindTexture (GL_TEXTURE_2D, 0);
     glDisable (GL_TEXTURE_2D);

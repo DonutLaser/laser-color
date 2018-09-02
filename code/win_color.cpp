@@ -8,10 +8,10 @@
 #include "lc_memory.h"
 #include "lc_opengl.h"
 
-#define WINDOW_HEIGHT 		359 
-#define WINDOW_WIDTH 		270 
-#define INITIAL_WINDOW_X	720
-#define INITIAL_WINDOW_Y	256	
+#define WINDOW_HEIGHT 		351 
+#define WINDOW_WIDTH 		256 
+#define INITIAL_WINDOW_X	888	
+#define INITIAL_WINDOW_Y	368	
 
 #define Kilobytes(x) ((x * 1024))
 #define Megabytes(x) ((Kilobytes(x) * 1024))
@@ -164,7 +164,7 @@ int CALLBACK WinMain (HINSTANCE hInstance, HINSTANCE prevInstance,
 	platform_log ("Opening Laser Color Picker...\n");
 
 	WNDCLASS wndClass = { };
-	wndClass.style = CS_HREDRAW | CS_OWNDC | CS_VREDRAW;
+	wndClass.style = CS_HREDRAW | CS_OWNDC | CS_VREDRAW | CS_DROPSHADOW;
 	wndClass.lpfnWndProc = window_proc;
 	wndClass.hInstance = hInstance;
 	wndClass.hIcon = LoadIcon (wndClass.hInstance, MAKEINTRESOURCE (101));

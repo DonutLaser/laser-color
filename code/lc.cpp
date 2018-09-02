@@ -14,19 +14,28 @@
 
 #define clamp_value(x, min, max) (x < min) ? min : ((x > max) ? max : x)
 
-#define HORIZONTAL_PADDING 10 
-#define VERTICAL_PADDING 5 
+#define MAJOR_MARGIN 15
+#define MINOR_MARGIN 8
 
-#define SLIDER_HEIGHT 15 
+#define TITLE_BAR_HEIGHT 32
+#define STATUS_BAR_HEIGHT 15
+#define COLOR_RECT_HEIGHT 120
+#define SLIDER_HEIGHT 23 
 #define SLIDER_HANDLE_WIDTH 8
-#define SWATCH_HEIGHT 15
-#define SWATCH_WIDTH 15
-#define SWATCH_AREA_HEIGHT 35
-#define OUTLINE_WIDTH 1
+#define SWATCH_WIDTH 31 
+#define SWATCH_HEIGHT 24 
+#define SWATCH_BAR_HEIGHT 54 
+#define OUTLINE_WIDTH 2
 
-#define CLEAR_COLOR 200, 200, 200
-#define SWATCH_AREA_COLOR 170, 170, 170
-#define OUTLINE_COLOR 80, 80, 80
+#define CLEAR_COLOR 175, 175, 175 
+#define TITLE_BAR_COLOR 118, 118, 118
+#define SWATCH_BAR_COLOR 81, 80, 80
+#define STATUS_BAR_COLOR 58, 58, 58
+#define SLIDER_BASE_COLOR 127, 127, 127
+#define RED_SLIDER_COLOR 124, 53, 53
+#define GREEN_SLIDER_COLOR 37, 107, 37
+#define BLUE_SLIDER_COLOR 57, 57, 126 
+#define OUTLINE_COLOR 206, 206, 209 
 #define DEFAULT_COLOR 255, 255, 255 
 #define HANDLE_COLOR 220, 220, 220
 #define DIRTY_COLOR 255, 70, 70
@@ -51,6 +60,9 @@
 #define FULL_STEP 1.0f
 
 #define BUFFER_SIZE 4096
+
+#define SLIDER_ARROW_LEFT_PATH "W:\\color\\data\\images\\slider_arrow_left.png"
+#define SLIDER_ARROW_RIGHT_PATH "W:\\color\\data\\images\\slider_arrow_right.png"
 
 enum change_direction { D_INCREASE = 1, D_DECREASE = -1 };
 enum color_conversion_format { CF_BYTE, CF_FLOAT, CF_HEX };
@@ -305,9 +317,10 @@ static void handle_input (lc_app* app, lc_input input) {
 	}
 }
 
-static void draw_outline (lc_rect rect, lc_color color) {
+static void draw_outline (lc_rect rect) {
+	lc_color color = make_colorb (OUTLINE_COLOR);
 	lc_rect outline_rect = { };
-	outline_rect.width = rect.width + (OUTLINE_WIDTH* 2);
+	outline_rect.width = rect.width + (OUTLINE_WIDTH * 2);
 	outline_rect.height = rect.height + (OUTLINE_WIDTH * 2);
 	outline_rect.x = rect.x - OUTLINE_WIDTH;
 	outline_rect.y = rect.y + OUTLINE_WIDTH;
@@ -315,54 +328,57 @@ static void draw_outline (lc_rect rect, lc_color color) {
 	opengl_rect (outline_rect, color);
 }
 
-static void draw_slider (layout_info* layout, int width, int height, lc_color color, float max_value, float value, bool is_selected) {
-	// Calculate the slider rect
+static void draw_slider (lc_app* app, int y_position, lc_color main_color, float max, float value, bool is_selected) {
+	lc_color base_color = make_colorb (SLIDER_BASE_COLOR);
 	lc_rect rect = { };
-	rect.width = width;
-	rect.height = height;
-	layout_auto_position (layout, &rect);
-
-	// Draw the outline if selected
-	if (is_selected)
-		draw_outline (rect, make_colorb (OUTLINE_COLOR));
-
-	// Draw slider
-	opengl_rect (rect, color);
-
-	byte value_in_bytes = (byte)((value * 255.0f) / max_value);
-	byte max_value_in_bytes = (byte)(max_value * 255.0f);
-
-	// Draw slider handle
-	lc_color handle_color = make_colorb (HANDLE_COLOR);
-	lc_rect handle_rect = { };
-	handle_rect.width = SLIDER_HANDLE_WIDTH;
-	handle_rect.height = height;
-	handle_rect.x = rect.x + ((value_in_bytes * (width - handle_rect.width)) / max_value_in_bytes);
-	handle_rect.y = rect.y;
-
-	opengl_rect (handle_rect, handle_color);
-}
-
-static void draw_color_swatch (layout_info* layout, int width, int height, lc_color color, bool is_selected) {
-	lc_rect rect = { };
-	rect.width = width;
-	rect.height = height;
-	layout_auto_position (layout, &rect);
-
-	draw_outline (rect, make_colorb (OUTLINE_COLOR));
-
-	opengl_rect (rect, color);
+	rect.width = app -> client_width - (2 * MAJOR_MARGIN);
+	rect.height = SLIDER_HEIGHT;
+	rect.x = MAJOR_MARGIN;
+	rect.y = y_position;
 
 	if (is_selected) {
-		lc_color highlight_color = make_colorb (255, 255, 255);
-		lc_rect highlight_rect = { };
-		highlight_rect.width = rect.width;
-		highlight_rect.height = rect.height / 4;
-		highlight_rect.x = rect.x;
-		highlight_rect.y = highlight_rect.height;
+		lc_image left_arrow = app -> ui_images[UI_SLIDER_ARROW_LEFT];
+		lc_image right_arrow = app -> ui_images[UI_SLIDER_ARROW_RIGHT];
 
-		opengl_rect (highlight_rect, highlight_color);
+		lc_color arrow_color = make_colorb (DEFAULT_COLOR);
+		lc_rect arrow_rect_left = { };
+		arrow_rect_left.width = left_arrow.width;
+		arrow_rect_left.height = left_arrow.height;
+		arrow_rect_left.x = 0;
+		arrow_rect_left.y = rect.y;
+		opengl_rect (arrow_rect_left, arrow_color, left_arrow);
+
+		lc_rect arrow_rect_right = { };
+		arrow_rect_right.width = right_arrow.width;
+		arrow_rect_right.height = right_arrow.height;
+		arrow_rect_right.x = MAJOR_MARGIN + rect.width;
+		arrow_rect_right.y = rect.y;
+		opengl_rect (arrow_rect_right, arrow_color, right_arrow);
+
+		draw_outline (rect);
 	}
+
+	opengl_rect (rect, base_color);
+
+	lc_rect colored_rect = { };
+	colored_rect.width = (int)((value * (float)rect.width) / max);
+	colored_rect.height = rect.height;
+	colored_rect.x = rect.x;
+	colored_rect.y = rect.y;
+	opengl_rect (colored_rect, main_color);
+}
+
+static void draw_color_swatch (lc_app* app, int x_position, int y_position, lc_color color, bool is_selected) {
+	lc_rect rect = { };
+	rect.width = SWATCH_WIDTH;
+	rect.height = SWATCH_HEIGHT;
+	rect.x = x_position;
+	rect.y = y_position;
+
+	if (is_selected)
+		draw_outline (rect);
+
+	opengl_rect (rect, color);
 }
 
 void app_init (lc_memory* memory, platform_api platform, int client_width, int client_height, char* documents) {
@@ -395,22 +411,22 @@ void app_init (lc_memory* memory, platform_api platform, int client_width, int c
 
 	app -> current_swatch_index = -1;
 
-	// For test purposes only now
-	int n;
-	app -> platform.log ("Loading test_image.png...");
-	app -> image.data = (void*)stbi_load ("W:\\color\\data\\images\\test_image.png",
-										  &app -> image.width,
-										  &app -> image.height,
-										  &n, 0);
+	// Load images used for UI
+	char image_paths[UI_COUNT][PATH_MAX] = { SLIDER_ARROW_LEFT_PATH, SLIDER_ARROW_RIGHT_PATH };
 
-	if (app -> image.data) {
-		app -> platform.log ("...Success!\n\tWidth: %d\n\tHeight: %d\n\tChannels: %d", 
-							 app -> image.width,
-							 app -> image.height,
-							 n);
+	for (int i = 0; i < UI_COUNT; ++i) {
+		int n;
+		app -> platform.log ("Loading %s...", image_paths[i]);
+		app -> ui_images[i].data = (void*)stbi_load (image_paths[i],
+													 &app -> ui_images[i].width,
+													 &app -> ui_images[i].height,
+													 &n, 0);
+
+		if (app -> ui_images[i].data)
+			app -> platform.log ("...Sucesss!");
+		else
+			app -> platform.log ("...Unable to load the image!");
 	}
-	else
-		app -> platform.log ("Unable to load test_image.png");
 }
 
 void app_update (lc_memory* memory, lc_input input) {
@@ -421,17 +437,63 @@ void app_update (lc_memory* memory, lc_input input) {
 	// layout_info layout = { };
 	// layout_set_client_dimensions (&layout, app -> client_width, app -> client_height);
 
-	// lc_color clear_color = make_colorb (CLEAR_COLOR);
-	// opengl_clear (app -> client_width, app -> client_height, clear_color);
+	lc_color clear_color = make_colorb (CLEAR_COLOR);
+	opengl_clear (app -> client_width, app -> client_height, clear_color);
 
-	// lc_color swatch_area_color = make_colorb (SWATCH_AREA_COLOR);
-	// lc_rect swatch_area_rect = { };
-	// swatch_area_rect.width = app -> client_width;
-	// swatch_area_rect.height = SWATCH_AREA_HEIGHT;
-	// swatch_area_rect.x = 0;
-	// swatch_area_rect.y = SWATCH_AREA_HEIGHT;
-	// opengl_rect (swatch_area_rect, swatch_area_color);
+	lc_color title_bar_color = make_colorb (TITLE_BAR_COLOR);
+	lc_rect title_bar_rect = { };
+	title_bar_rect.width = app -> client_width;
+	title_bar_rect.height = TITLE_BAR_HEIGHT;
+	title_bar_rect.x = 0;
+	title_bar_rect.y = app -> client_height;
+	opengl_rect (title_bar_rect, title_bar_color);
 
+	lc_rect main_color_rect = { };
+	main_color_rect.width = (app -> client_width - (2 * MAJOR_MARGIN)) / 2;
+	main_color_rect.height = COLOR_RECT_HEIGHT;
+	main_color_rect.x = MAJOR_MARGIN;
+	main_color_rect.y = app -> client_height - TITLE_BAR_HEIGHT - MAJOR_MARGIN;
+	opengl_rect (main_color_rect, app -> current_color);
+
+	lc_color prev_color = app -> previous_color;
+	lc_rect prev_color_rect = { };
+	prev_color_rect.width = main_color_rect.width; 
+	prev_color_rect.height = main_color_rect.height;
+	prev_color_rect.x = main_color_rect.width + MAJOR_MARGIN;
+	prev_color_rect.y = main_color_rect.y;
+	opengl_rect (prev_color_rect, prev_color);
+
+	lc_color status_bar_color = make_colorb (STATUS_BAR_COLOR);
+	lc_rect status_bar_rect = { };
+	status_bar_rect.width = app -> client_width;
+	status_bar_rect.height = STATUS_BAR_HEIGHT;
+	status_bar_rect.x = 0;
+	status_bar_rect.y = STATUS_BAR_HEIGHT;
+	opengl_rect (status_bar_rect, status_bar_color);
+
+	lc_color swatch_bar_color = make_colorb (SWATCH_BAR_COLOR);
+	lc_rect swatch_bar_rect = { };
+	swatch_bar_rect.width = app -> client_width;
+	swatch_bar_rect.height = SWATCH_BAR_HEIGHT;
+	swatch_bar_rect.x = 0;
+	swatch_bar_rect.y = SWATCH_BAR_HEIGHT + STATUS_BAR_HEIGHT; 
+	opengl_rect (swatch_bar_rect, swatch_bar_color);
+
+	draw_slider (app, main_color_rect.y - main_color_rect.height - MAJOR_MARGIN,
+				 make_colorb (RED_SLIDER_COLOR), 255, color_component_f2b (app -> current_color.r),
+				 app -> current_component == &app -> current_color.r);
+	draw_slider (app, main_color_rect.y - main_color_rect.height - MAJOR_MARGIN - SLIDER_HEIGHT - MINOR_MARGIN,
+				 make_colorb (GREEN_SLIDER_COLOR), 255, color_component_f2b (app -> current_color.g),
+				 app -> current_component == &app -> current_color.g);
+	draw_slider (app, main_color_rect.y - main_color_rect.height - MAJOR_MARGIN - SLIDER_HEIGHT - MINOR_MARGIN - SLIDER_HEIGHT - MINOR_MARGIN,
+				 make_colorb (BLUE_SLIDER_COLOR), 255, color_component_f2b (app -> current_color.b),
+				 app -> current_component == &app -> current_color.b);
+
+	for (int i = 0; i < app -> color_swatches.count; ++i) {
+		draw_color_swatch (app, MAJOR_MARGIN + ((SWATCH_WIDTH + MINOR_MARGIN) * i), 
+						   swatch_bar_rect.y - MAJOR_MARGIN, app -> color_swatches.colors[i], 
+						   app -> current_swatch_index == i);
+	}
 	// if (app -> color_library_is_dirty) {
 	// 	lc_color dirty_color = make_colorb (DIRTY_COLOR);
 	// 	lc_rect dirty_rect = { };
@@ -442,24 +504,6 @@ void app_update (lc_memory* memory, lc_input input) {
 
 	// 	opengl_rect (dirty_rect, dirty_color);
 	// }
-
-	// // (0,0) is bottom left, (width, height) is top right 
-	// lc_color color = app -> current_color;
-	// lc_rect color_rect = { };
-	// color_rect.width = app -> client_width - (app -> client_height / 3) - (2 * HORIZONTAL_PADDING);
-	// color_rect.height = app -> client_height / 3;
-	// layout_auto_position (&layout, &color_rect);
-	// opengl_rect (color_rect, color);
-
-	// lc_color previous_color = app -> previous_color;
-	// lc_rect previous_color_rect = { };
-	// previous_color_rect.width = color_rect.height; 
-	// previous_color_rect.height = color_rect.height;
-	// previous_color_rect.x = color_rect.width + HORIZONTAL_PADDING;
-	// previous_color_rect.y = color_rect.y;
-	// opengl_rect (previous_color_rect, previous_color);
-
-	// layout_space (&layout);
 
 	// int slider_width = app -> client_width - (2 * HORIZONTAL_PADDING);
 	// draw_slider (&layout, slider_width, SLIDER_HEIGHT, make_colorb (255, 0, 0), 1.0f, app -> current_color.r,
