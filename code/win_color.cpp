@@ -11,7 +11,7 @@
 #define WINDOW_HEIGHT 		359 
 #define WINDOW_WIDTH 		270 
 #define INITIAL_WINDOW_X	720
-#define INITIAL_WINDOW_y	256	
+#define INITIAL_WINDOW_Y	256	
 
 #define Kilobytes(x) ((x * 1024))
 #define Megabytes(x) ((Kilobytes(x) * 1024))
