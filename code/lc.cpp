@@ -418,68 +418,68 @@ void app_update (lc_memory* memory, lc_input input) {
 
 	handle_input (app, input);
 
-	layout_info layout = { };
-	layout_set_client_dimensions (&layout, app -> client_width, app -> client_height);
+	// layout_info layout = { };
+	// layout_set_client_dimensions (&layout, app -> client_width, app -> client_height);
 
-	lc_color clear_color = make_colorb (CLEAR_COLOR);
-	opengl_clear (app -> client_width, app -> client_height, clear_color);
+	// lc_color clear_color = make_colorb (CLEAR_COLOR);
+	// opengl_clear (app -> client_width, app -> client_height, clear_color);
 
-	lc_color swatch_area_color = make_colorb (SWATCH_AREA_COLOR);
-	lc_rect swatch_area_rect = { };
-	swatch_area_rect.width = app -> client_width;
-	swatch_area_rect.height = SWATCH_AREA_HEIGHT;
-	swatch_area_rect.x = 0;
-	swatch_area_rect.y = SWATCH_AREA_HEIGHT;
-	opengl_rect (swatch_area_rect, swatch_area_color);
+	// lc_color swatch_area_color = make_colorb (SWATCH_AREA_COLOR);
+	// lc_rect swatch_area_rect = { };
+	// swatch_area_rect.width = app -> client_width;
+	// swatch_area_rect.height = SWATCH_AREA_HEIGHT;
+	// swatch_area_rect.x = 0;
+	// swatch_area_rect.y = SWATCH_AREA_HEIGHT;
+	// opengl_rect (swatch_area_rect, swatch_area_color);
 
-	if (app -> color_library_is_dirty) {
-		lc_color dirty_color = make_colorb (DIRTY_COLOR);
-		lc_rect dirty_rect = { };
-		dirty_rect.width = SWATCH_WIDTH / 3;
-		dirty_rect.height = SWATCH_HEIGHT + (OUTLINE_WIDTH * 2);
-		dirty_rect.x = 0;
-		dirty_rect.y = SWATCH_AREA_HEIGHT - ((SWATCH_AREA_HEIGHT - SWATCH_HEIGHT) / 2) + OUTLINE_WIDTH;
+	// if (app -> color_library_is_dirty) {
+	// 	lc_color dirty_color = make_colorb (DIRTY_COLOR);
+	// 	lc_rect dirty_rect = { };
+	// 	dirty_rect.width = SWATCH_WIDTH / 3;
+	// 	dirty_rect.height = SWATCH_HEIGHT + (OUTLINE_WIDTH * 2);
+	// 	dirty_rect.x = 0;
+	// 	dirty_rect.y = SWATCH_AREA_HEIGHT - ((SWATCH_AREA_HEIGHT - SWATCH_HEIGHT) / 2) + OUTLINE_WIDTH;
 
-		opengl_rect (dirty_rect, dirty_color);
-	}
+	// 	opengl_rect (dirty_rect, dirty_color);
+	// }
 
-	// (0,0) is bottom left, (width, height) is top right 
-	lc_color color = app -> current_color;
-	lc_rect color_rect = { };
-	color_rect.width = app -> client_width - (app -> client_height / 3) - (2 * HORIZONTAL_PADDING);
-	color_rect.height = app -> client_height / 3;
-	layout_auto_position (&layout, &color_rect);
-	opengl_rect (color_rect, color);
+	// // (0,0) is bottom left, (width, height) is top right 
+	// lc_color color = app -> current_color;
+	// lc_rect color_rect = { };
+	// color_rect.width = app -> client_width - (app -> client_height / 3) - (2 * HORIZONTAL_PADDING);
+	// color_rect.height = app -> client_height / 3;
+	// layout_auto_position (&layout, &color_rect);
+	// opengl_rect (color_rect, color);
 
-	lc_color previous_color = app -> previous_color;
-	lc_rect previous_color_rect = { };
-	previous_color_rect.width = color_rect.height; 
-	previous_color_rect.height = color_rect.height;
-	previous_color_rect.x = color_rect.width + HORIZONTAL_PADDING;
-	previous_color_rect.y = color_rect.y;
-	opengl_rect (previous_color_rect, previous_color);
+	// lc_color previous_color = app -> previous_color;
+	// lc_rect previous_color_rect = { };
+	// previous_color_rect.width = color_rect.height; 
+	// previous_color_rect.height = color_rect.height;
+	// previous_color_rect.x = color_rect.width + HORIZONTAL_PADDING;
+	// previous_color_rect.y = color_rect.y;
+	// opengl_rect (previous_color_rect, previous_color);
 
-	layout_space (&layout);
+	// layout_space (&layout);
 
-	int slider_width = app -> client_width - (2 * HORIZONTAL_PADDING);
-	draw_slider (&layout, slider_width, SLIDER_HEIGHT, make_colorb (255, 0, 0), 1.0f, app -> current_color.r,
-				 app -> current_component == &app -> current_color.r);
-	draw_slider (&layout, slider_width, SLIDER_HEIGHT, make_colorb (0, 255, 0), 1.0f, app -> current_color.g,
-				 app -> current_component == &app -> current_color.g);
-	draw_slider (&layout, slider_width, SLIDER_HEIGHT, make_colorb (0, 0, 225), 1.0f, app -> current_color.b,
-				 app -> current_component == &app -> current_color.b);
+	// int slider_width = app -> client_width - (2 * HORIZONTAL_PADDING);
+	// draw_slider (&layout, slider_width, SLIDER_HEIGHT, make_colorb (255, 0, 0), 1.0f, app -> current_color.r,
+	// 			 app -> current_component == &app -> current_color.r);
+	// draw_slider (&layout, slider_width, SLIDER_HEIGHT, make_colorb (0, 255, 0), 1.0f, app -> current_color.g,
+	// 			 app -> current_component == &app -> current_color.g);
+	// draw_slider (&layout, slider_width, SLIDER_HEIGHT, make_colorb (0, 0, 225), 1.0f, app -> current_color.b,
+	// 			 app -> current_component == &app -> current_color.b);
 
-	layout_space (&layout, 23);
+	// layout_space (&layout, 23);
 
-	layout_begin_horizontal_group (&layout); {
-		for (int i = 0; i < app -> color_swatches.count; ++i) {
-			draw_color_swatch (&layout, SWATCH_WIDTH, 
-							   SWATCH_HEIGHT, 
-							   app -> color_swatches.colors[i], 
-							   app -> current_swatch_index == i);
-		}
-	}
-	layout_end_horizontal_group (&layout, SWATCH_HEIGHT);
+	// layout_begin_horizontal_group (&layout); {
+	// 	for (int i = 0; i < app -> color_swatches.count; ++i) {
+	// 		draw_color_swatch (&layout, SWATCH_WIDTH, 
+	// 						   SWATCH_HEIGHT, 
+	// 						   app -> color_swatches.colors[i], 
+	// 						   app -> current_swatch_index == i);
+	// 	}
+	// }
+	// layout_end_horizontal_group (&layout, SWATCH_HEIGHT);
 }
 
 void app_close (lc_memory* memory) {

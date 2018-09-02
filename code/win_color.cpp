@@ -8,8 +8,10 @@
 #include "lc_memory.h"
 #include "lc_opengl.h"
 
-#define WINDOW_HEIGHT 230 
-#define WINDOW_WIDTH  302
+#define WINDOW_HEIGHT 		359 
+#define WINDOW_WIDTH 		270 
+#define INITIAL_WINDOW_X	720
+#define INITIAL_WINDOW_y	256	
 
 #define Kilobytes(x) ((x * 1024))
 #define Megabytes(x) ((Kilobytes(x) * 1024))
@@ -171,13 +173,10 @@ int CALLBACK WinMain (HINSTANCE hInstance, HINSTANCE prevInstance,
 	if (RegisterClass (&wndClass)) {
 		platform_log ("Creating a window of size %dx%d", WINDOW_WIDTH, WINDOW_HEIGHT);
 		HWND window = CreateWindow ("Laser Color", "Laser Color",
-									WS_OVERLAPPED | WS_CAPTION | 
-										WS_SYSMENU | WS_MINIMIZEBOX,
-									CW_USEDEFAULT, CW_USEDEFAULT,
+									WS_POPUP, 
+									INITIAL_WINDOW_X, INITIAL_WINDOW_Y,
 									WINDOW_WIDTH, WINDOW_HEIGHT,
-									0, 0,
-									hInstance, 
-									0);
+									0, 0, hInstance, 0);
 
 		if (window) {
 			HDC device_context = GetDC (window);
