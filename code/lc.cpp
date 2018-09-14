@@ -4,13 +4,15 @@
 #include <stdlib.h>
 
 #include "lc_platform.h"
-#include "lc_shared.h"
 #include "lc_memory.h"
 #include "lc_opengl.h"
 #include "lc_gui_layout.h"
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "../third_party/stb_image.h"
+// #define STB_IMAGE_WRITE_IMPLEMENTATION
+// #define STBI_MSC_SECURE_CRT
+// #include "../third_party/stb_image_write.h"
 
 #define clamp_value(x, min, max) (x < min) ? min : ((x > max) ? max : x)
 
@@ -26,6 +28,7 @@
 #define SWATCH_HEIGHT 24 
 #define SWATCH_BAR_HEIGHT 54 
 #define OUTLINE_WIDTH 2
+#define MAJOR_FONT_SIZE 15 
 
 #define CLEAR_COLOR 175, 175, 175 
 #define TITLE_BAR_COLOR 118, 118, 118
@@ -63,6 +66,10 @@
 
 #define SLIDER_ARROW_LEFT_PATH "W:\\color\\data\\images\\slider_arrow_left.png"
 #define SLIDER_ARROW_RIGHT_PATH "W:\\color\\data\\images\\slider_arrow_right.png"
+#define SWATCH_ARROW_TOP "W:\\color\\data\\images\\swatch_arrow_top.png"
+#define SWATCH_ARROW_BOTTOM "W:\\color\\data\\images\\swatch_arrow_bottom.png"
+
+#define MAIN_FONT "W:\\color\\data\\fonts\\consola.ttf"
 
 enum change_direction { D_INCREASE = 1, D_DECREASE = -1 };
 enum color_conversion_format { CF_BYTE, CF_FLOAT, CF_HEX };
@@ -375,8 +382,27 @@ static void draw_color_swatch (lc_app* app, int x_position, int y_position, lc_c
 	rect.x = x_position;
 	rect.y = y_position;
 
-	if (is_selected)
+	if (is_selected) {
+		lc_image top_arrow = app -> ui_images[UI_SWATCH_ARROW_TOP];
+		lc_image bottom_arrow = app -> ui_images[UI_SWATCH_ARROW_BOTTOM];
+
+		lc_color arrow_color = make_colorb (DEFAULT_COLOR);
+		lc_rect arrow_rect_top = { };
+		arrow_rect_top.width = top_arrow.width;
+		arrow_rect_top.height = top_arrow.height;
+		arrow_rect_top.x = rect.x;
+		arrow_rect_top.y = y_position + MAJOR_MARGIN;
+		opengl_rect (arrow_rect_top, arrow_color, top_arrow);
+
+		lc_rect arrow_rect_bottom = { };
+		arrow_rect_bottom.width = bottom_arrow.width;
+		arrow_rect_bottom.height = bottom_arrow.height;
+		arrow_rect_bottom.x = rect.x;
+		arrow_rect_bottom.y = y_position - rect.height;
+		opengl_rect (arrow_rect_bottom, arrow_color, bottom_arrow);
+
 		draw_outline (rect);
+	}
 
 	opengl_rect (rect, color);
 }
@@ -412,8 +438,7 @@ void app_init (lc_memory* memory, platform_api platform, int client_width, int c
 	app -> current_swatch_index = -1;
 
 	// Load images used for UI
-	char image_paths[UI_COUNT][PATH_MAX] = { SLIDER_ARROW_LEFT_PATH, SLIDER_ARROW_RIGHT_PATH };
-
+	char image_paths[UI_COUNT][PATH_MAX] = { SLIDER_ARROW_LEFT_PATH, SLIDER_ARROW_RIGHT_PATH, SWATCH_ARROW_TOP, SWATCH_ARROW_BOTTOM };
 	for (int i = 0; i < UI_COUNT; ++i) {
 		int n;
 		app -> platform.log ("Loading %s...", image_paths[i]);
@@ -427,15 +452,19 @@ void app_init (lc_memory* memory, platform_api platform, int client_width, int c
 		else
 			app -> platform.log ("...Unable to load the image!");
 	}
+	
+	// Load font
+	app -> platform.log ("Loading the %s font...", MAIN_FONT);
+	if (!load_font (MAIN_FONT, MAJOR_FONT_SIZE, &app -> main_font))
+		app -> platform.log ("...Unable to load the font.");
+	else
+		app -> platform.log ("...Success!");
 }
 
 void app_update (lc_memory* memory, lc_input input) {
 	lc_app* app = (lc_app*)memory -> storage;
 
 	handle_input (app, input);
-
-	// layout_info layout = { };
-	// layout_set_client_dimensions (&layout, app -> client_width, app -> client_height);
 
 	lc_color clear_color = make_colorb (CLEAR_COLOR);
 	opengl_clear (app -> client_width, app -> client_height, clear_color);
@@ -494,6 +523,11 @@ void app_update (lc_memory* memory, lc_input input) {
 						   swatch_bar_rect.y - MAJOR_MARGIN, app -> color_swatches.colors[i], 
 						   app -> current_swatch_index == i);
 	}
+
+	char text[13] = { "Laser Color\0" };
+	lc_color text_color = make_colorb (DEFAULT_COLOR);
+	opengl_text (10, app -> client_height - 20, text_color, app -> main_font, text);
+
 	// if (app -> color_library_is_dirty) {
 	// 	lc_color dirty_color = make_colorb (DIRTY_COLOR);
 	// 	lc_rect dirty_rect = { };
@@ -504,26 +538,6 @@ void app_update (lc_memory* memory, lc_input input) {
 
 	// 	opengl_rect (dirty_rect, dirty_color);
 	// }
-
-	// int slider_width = app -> client_width - (2 * HORIZONTAL_PADDING);
-	// draw_slider (&layout, slider_width, SLIDER_HEIGHT, make_colorb (255, 0, 0), 1.0f, app -> current_color.r,
-	// 			 app -> current_component == &app -> current_color.r);
-	// draw_slider (&layout, slider_width, SLIDER_HEIGHT, make_colorb (0, 255, 0), 1.0f, app -> current_color.g,
-	// 			 app -> current_component == &app -> current_color.g);
-	// draw_slider (&layout, slider_width, SLIDER_HEIGHT, make_colorb (0, 0, 225), 1.0f, app -> current_color.b,
-	// 			 app -> current_component == &app -> current_color.b);
-
-	// layout_space (&layout, 23);
-
-	// layout_begin_horizontal_group (&layout); {
-	// 	for (int i = 0; i < app -> color_swatches.count; ++i) {
-	// 		draw_color_swatch (&layout, SWATCH_WIDTH, 
-	// 						   SWATCH_HEIGHT, 
-	// 						   app -> color_swatches.colors[i], 
-	// 						   app -> current_swatch_index == i);
-	// 	}
-	// }
-	// layout_end_horizontal_group (&layout, SWATCH_HEIGHT);
 }
 
 void app_close (lc_memory* memory) {

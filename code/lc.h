@@ -12,7 +12,7 @@
 struct lc_memory;
 
 enum input_modifier { M_CTRL = 0x01, M_SHIFT = 0x02, M_ALT = 0x04, M_CAPS = 0x08, M_NONE = 0x00 };
-enum ui_images { UI_SLIDER_ARROW_LEFT, UI_SLIDER_ARROW_RIGHT, UI_COUNT };
+enum ui_images { UI_SLIDER_ARROW_LEFT, UI_SLIDER_ARROW_RIGHT, UI_SWATCH_ARROW_TOP, UI_SWATCH_ARROW_BOTTOM, UI_COUNT };
 
 struct lc_file {
 	void* handle;
@@ -43,6 +43,7 @@ struct lc_app {
 	bool color_library_is_dirty;
 
 	lc_image ui_images[UI_COUNT];
+	lc_font main_font;
 
 	platform_api platform;
 };
