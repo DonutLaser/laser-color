@@ -525,6 +525,8 @@ void app_update (lc_memory* memory, lc_input input) {
 	}
 
 	char text[13] = { "Laser Color\0" };
+	lc_color shadow_color = make_colorb (30, 30, 30);
+	opengl_text (11, app -> client_height - 21, shadow_color, app -> main_font, text);
 	lc_color text_color = make_colorb (DEFAULT_COLOR);
 	opengl_text (10, app -> client_height - 20, text_color, app -> main_font, text);
 
