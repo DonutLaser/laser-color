@@ -1,4 +1,5 @@
 #include <windows.h>
+#include <windowsx.h>
 #include <shlobj.h>
 #include <stdio.h>
 #include <gl/gl.h>
@@ -113,6 +114,16 @@ static void platform_copy_to_clipboard (const char* text) {
 	CloseClipboard ();
 }
 
+static void platform_close_application () {
+	PostQuitMessage (0);
+}
+
+static void platform_minimize_application () {
+	HWND window = GetActiveWindow ();
+	SetWindowLongPtr (window, GWL_STYLE, WS_OVERLAPPEDWINDOW);
+	ShowWindow (GetActiveWindow (), SW_MINIMIZE);
+}
+
 static bool initialize_open_gl (HWND window, int client_width, int client_height) {
 	HDC device_context = GetDC (window);
 	PIXELFORMATDESCRIPTOR format = { };
@@ -147,6 +158,14 @@ static LRESULT CALLBACK window_proc (HWND window, UINT msg, WPARAM wParam, LPARA
 	switch (msg) {
 		case WM_DESTROY: {
 			PostQuitMessage (0);
+			return 0;
+		}
+		case WM_SIZE: {
+			if (wParam == SIZE_RESTORED) {
+				SetWindowLongPtr (window, GWL_STYLE, WS_POPUP);
+				ShowWindow (window, SW_RESTORE);
+			}
+
 			return 0;
 		}
 	}
@@ -216,11 +235,16 @@ int CALLBACK WinMain (HINSTANCE hInstance, HINSTANCE prevInstance,
 			api.close_file = platform_close_file;
 			api.log = platform_log;
 			api.copy_to_clipboard = platform_copy_to_clipboard;
+			api.close_application = platform_close_application;
+			api.minimize_application = platform_minimize_application;
 
 			char documents_path[PATH_MAX];
 			SHGetFolderPath (NULL, CSIDL_MYDOCUMENTS, NULL, SHGFP_TYPE_CURRENT, documents_path);
 
 			app_init (&app_memory, api, client_width, client_height, documents_path);
+
+			HCURSOR default_cursor = LoadCursor (NULL, IDC_ARROW);
+			SetCursor (default_cursor);
 
 			ShowWindow (window, cmdShow);
 
@@ -249,7 +273,7 @@ int CALLBACK WinMain (HINSTANCE hInstance, HINSTANCE prevInstance,
 						switch (msg.wParam) {
 							case VK_F4: {
 								if (input.modifier & M_ALT)
-									PostQuitMessage (0);
+									platform_close_application ();
 
 								break;
 							}
@@ -260,12 +284,30 @@ int CALLBACK WinMain (HINSTANCE hInstance, HINSTANCE prevInstance,
 						}
 						break;
 					}
+					case WM_LBUTTONDOWN: {
+						input.left_mouse_button_down = true;
+						// input.mouse_x = GET_X_LPARAM (msg.lParam);
+						// input.mouse_y = GET_Y_LPARAM (msg.lParam);
+						break;
+					}
+					case WM_LBUTTONUP: {
+						input.left_mouse_button_up = true;
+						// input.mouse_x = GET_X_LPARAM (msg.lParam);
+						// input.mouse_y = GET_Y_LPARAM (msg.lParam);
+						break;
+					}
 					default: {
 						TranslateMessage (&msg);
 						DispatchMessage (&msg);
 						break;
 					}
 				}
+
+				POINT mouse_position;
+				GetCursorPos (&mouse_position);
+				ScreenToClient (window, &mouse_position);
+				input.mouse_x = mouse_position.x;
+				input.mouse_y = mouse_position.y;
 
 				app_update (&app_memory, input);
 				SwapBuffers (device_context);

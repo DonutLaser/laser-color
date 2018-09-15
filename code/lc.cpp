@@ -45,8 +45,12 @@
 #define SHADOW_COLOR 30, 30, 30
 
 #define CLOSE_COLOR 58, 58, 58
+#define CLOSE_HIGHLIGHT_COLOR 185, 60, 60
+#define CLOSE_PRESSED_COLOR 214, 70, 70
 
 #define MINIMIZE_COLOR 89, 88, 88
+#define MINIMIZE_HIGHLIGHT_COLOR 135, 134, 134
+#define MINIMIZE_PRESSED_COLOR 158, 157, 157
 
 #define KEY_ALPHA_0 0x30
 #define KEY_B 		0x42
@@ -82,6 +86,11 @@
 
 enum change_direction { D_INCREASE = 1, D_DECREASE = -1 };
 enum color_conversion_format { CF_BYTE, CF_FLOAT, CF_HEX };
+
+static bool is_point_in_rect (lc_rect rect, int x, int y) {
+	return x >= rect.x && x <= rect.x + rect.width &&
+		y <= rect.y && y >= rect.y - rect.height;
+}
 
 static byte string_to_byte (char* str) {
 	byte result = 0;
@@ -251,6 +260,9 @@ static void load_color_library (lc_app* app) {
 }
 
 static void handle_input (lc_app* app, lc_input input) {
+	// Convert the coordinate from 0,0 at the top to 0,0 at the bottom
+	input.mouse_y = app -> client_height - input.mouse_y;
+
 	switch (input.key) {
 		case KEY_J: 
 		case KEY_K: {
@@ -416,6 +428,30 @@ static void draw_color_swatch (lc_app* app, int x_position, int y_position, lc_c
 	opengl_rect (rect, color);
 }
 
+static bool draw_button (lc_app* app, int x_position, int y_position, int width, int height, lc_color color, lc_color highlight_color, lc_color pressed_color, lc_image icon, lc_input mouse) {
+	bool result = false;
+	lc_rect rect = { };
+	rect.width = width;
+	rect.height = height;
+	rect.x = x_position;
+	rect.y = y_position;
+
+	lc_color actual_color;
+	if (is_point_in_rect (rect, mouse.mouse_x, mouse.mouse_y)) {
+		actual_color = mouse.left_mouse_button_down ? pressed_color : highlight_color;
+
+		if (mouse.left_mouse_button_up)
+			result = true;
+	}
+	else
+		actual_color = color;
+
+	opengl_rect (rect, actual_color);
+	opengl_rect (rect, make_colorb (DEFAULT_COLOR), icon);
+
+	return result;
+}
+
 void app_init (lc_memory* memory, platform_api platform, int client_width, int client_height, char* documents) {
 	lc_app* app = (lc_app*)memory -> storage;
 	app -> platform = platform;
@@ -473,6 +509,8 @@ void app_init (lc_memory* memory, platform_api platform, int client_width, int c
 void app_update (lc_memory* memory, lc_input input) {
 	lc_app* app = (lc_app*)memory -> storage;
 
+	// Convert the coordinate from 0,0 at the top to 0,0 at the bottom
+	input.mouse_y = app -> client_height - input.mouse_y;
 	handle_input (app, input);
 
 	lc_color white_color = make_colorb (DEFAULT_COLOR);
@@ -493,21 +531,33 @@ void app_update (lc_memory* memory, lc_input input) {
 	lc_color shadow_color = make_colorb (SHADOW_COLOR);
 	opengl_text (10, app -> client_height - 21, white_color, shadow_color, app -> main_font, title, true);
 
-	lc_color close_button_color = make_colorb (CLOSE_COLOR);
-	lc_rect close_button_rect = { };
-	close_button_rect.width = TITLE_BAR_HEIGHT;
-	close_button_rect.height = TITLE_BAR_HEIGHT;
-	close_button_rect.x = app -> client_width - close_button_rect.width;
-	close_button_rect.y = app -> client_height;
-	opengl_rect (close_button_rect, close_button_color);
-	opengl_rect (close_button_rect, white_color, app -> ui_images[UI_CLOSE]);
+	if (draw_button (app, app -> client_width - TITLE_BAR_HEIGHT, app -> client_height, TITLE_BAR_HEIGHT, TITLE_BAR_HEIGHT,
+				 make_colorb (CLOSE_COLOR), make_colorb (CLOSE_HIGHLIGHT_COLOR), make_colorb (CLOSE_PRESSED_COLOR), 
+				 app -> ui_images[UI_CLOSE], input)) {
+		app -> platform.close_application ();
+	}
 
-	lc_color minimize_button_color = make_colorb (MINIMIZE_COLOR);
-	lc_rect minimize_button_rect = close_button_rect; 
-	minimize_button_rect.x -= TITLE_BAR_HEIGHT;
-	opengl_rect (minimize_button_rect, minimize_button_color);
-	opengl_rect (minimize_button_rect, white_color, app -> ui_images[UI_MINIMIZE]);
-	
+	if (draw_button (app, app -> client_width - (2 * TITLE_BAR_HEIGHT), app -> client_height, TITLE_BAR_HEIGHT, TITLE_BAR_HEIGHT,
+				 make_colorb (MINIMIZE_COLOR), make_colorb (MINIMIZE_HIGHLIGHT_COLOR), make_colorb (MINIMIZE_PRESSED_COLOR), 
+				 app -> ui_images[UI_MINIMIZE], input)) {
+		app -> platform.minimize_application ();
+	} 
+
+	// lc_color close_button_color = make_colorb (CLOSE_COLOR);
+	// lc_rect close_button_rect = { };
+	// close_button_rect.width = TITLE_BAR_HEIGHT;
+	// close_button_rect.height = TITLE_BAR_HEIGHT;
+	// close_button_rect.x = app -> client_width - close_button_rect.width;
+	// close_button_rect.y = app -> client_height;
+	// opengl_rect (close_button_rect, close_button_color);
+	// opengl_rect (close_button_rect, white_color, app -> ui_images[UI_CLOSE]);
+
+	// lc_color minimize_button_color = make_colorb (MINIMIZE_COLOR);
+	// lc_rect minimize_button_rect = close_button_rect; 
+	// minimize_button_rect.x -= TITLE_BAR_HEIGHT;
+	// opengl_rect (minimize_button_rect, minimize_button_color);
+	// opengl_rect (minimize_button_rect, white_color, app -> ui_images[UI_MINIMIZE]);
+
 	// COLOR DISPLAY
 	lc_rect main_color_rect = { };
 	main_color_rect.width = (app -> client_width - (2 * MAJOR_MARGIN)) / 2;

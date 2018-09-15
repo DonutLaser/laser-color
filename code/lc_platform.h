@@ -22,14 +22,23 @@ typedef LOG(log_message);
 #define COPY_TO_CLIPBOARD(name) void name(const char* text)
 typedef COPY_TO_CLIPBOARD(copy_to_clipboard);
 
-struct platform_api {
-	open_file* 		open_file;
-	write_file* 	write_file;	
-	read_file*		read_file;
-	close_file* 	close_file;
-	log_message* 	log;
+#define CLOSE_APP(name) void name()
+typedef CLOSE_APP(close_application);
 
-	copy_to_clipboard* copy_to_clipboard;
+#define MINIMIZE_APP(name) void name()
+typedef MINIMIZE_APP(minimize_application);
+
+struct platform_api {
+	open_file* 				open_file;
+	write_file* 			write_file;	
+	read_file*				read_file;
+	close_file* 			close_file;
+	log_message* 			log;
+
+	copy_to_clipboard* 		copy_to_clipboard;
+
+	close_application* 		close_application;
+	minimize_application* 	minimize_application;
 };
 
 #endif

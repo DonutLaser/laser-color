@@ -22,6 +22,10 @@ struct lc_file {
 struct lc_input {
 	int key;
 	int modifier;
+	int mouse_x;
+	int mouse_y;
+	bool left_mouse_button_down;
+	bool left_mouse_button_up;
 };
 
 struct lc_color_library {
