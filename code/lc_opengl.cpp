@@ -151,7 +151,8 @@ void opengl_text (int baseline_x, int baseline_y, lc_color color, lc_font font, 
         glBindTexture (GL_TEXTURE_2D, 0);
         glDisable (GL_TEXTURE_2D);
 
-        x_start += (c.advance >> 6);
+        int advance = char_rect.width == 0 ? c.advance >> 6 : char_rect.width;
+        x_start += advance;
 
         previous = *text;
         ++text;
