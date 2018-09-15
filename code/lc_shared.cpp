@@ -32,7 +32,6 @@ bool load_font (const char* font_path, int pixel_size, lc_font* result) {
 	if (FT_New_Face (freetype_lib, font_path, 0, &font))
 		return false;
 
-	FT_Select_Charmap (font, FT_ENCODING_UNICODE);
 	FT_Set_Pixel_Sizes (font, 0, pixel_size);
 
 	// Load 128 ASCII characters
@@ -60,8 +59,25 @@ bool load_font (const char* font_path, int pixel_size, lc_font* result) {
 		result -> chars[c] = new_char;
 	}
 
-	FT_Done_Face (font);
-	FT_Done_FreeType (freetype_lib);
+	result -> freetype_face = &font;
+	result -> has_kerning = FT_HAS_KERNING (font);
+
+	// FT_Done_Face (font);
+	// FT_Done_FreeType (freetype_lib);
 
 	return true;
+}
+
+int get_kerning (lc_font font, char left, char right) {
+	FT_Face face = *((FT_Face*)font.freetype_face);
+
+	if (!font.has_kerning || !left || !right)
+		return 0;
+
+	int left_index = FT_Get_Char_Index (face, left);
+	int right_index = FT_Get_Char_Index (face, right);
+	FT_Vector kern;
+	FT_Get_Kerning (face, left, right, FT_KERNING_DEFAULT, &kern);
+
+	return kern.x;
 }

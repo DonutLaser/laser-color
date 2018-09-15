@@ -3,8 +3,6 @@
 
 #define byte unsigned char
 
-struct stbtt_fontinfo;
-
 struct lc_rect {
 	int x;
 	int y;
@@ -28,6 +26,9 @@ struct lc_font_character {
 
 struct lc_font {
 	lc_font_character chars[128];
+	void* freetype_face;
+	// FT_FaceRec freetype_face;
+	bool has_kerning;
 };
 
 union lc_color {
@@ -46,5 +47,6 @@ lc_color make_colorb (byte r, byte g, byte b);
 byte color_component_f2b (float value);
 
 bool load_font (const char* font_path, int pixel_size, lc_font* result);
+int get_kerning (lc_font font, char left, char right);
 
 #endif

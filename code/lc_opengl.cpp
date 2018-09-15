@@ -101,8 +101,11 @@ void opengl_text (int baseline_x, int baseline_y, lc_color color, lc_font font, 
     glPixelStorei (GL_UNPACK_ALIGNMENT, 1);
 
     int x_start = baseline_x;
+    char previous = 0;
     while (*text != '\0') {
         lc_font_character c = font.chars[*text];
+
+        x_start += get_kerning (font, previous, *text);
 
         lc_rect char_rect = { };
         char_rect.x = x_start;
@@ -148,8 +151,9 @@ void opengl_text (int baseline_x, int baseline_y, lc_color color, lc_font font, 
         glBindTexture (GL_TEXTURE_2D, 0);
         glDisable (GL_TEXTURE_2D);
 
-        x_start += c.advance >> 6;
+        x_start += (c.advance >> 6);
 
+        previous = *text;
         ++text;
     }
 }
