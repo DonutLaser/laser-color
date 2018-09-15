@@ -115,6 +115,8 @@ static void platform_copy_to_clipboard (const char* text) {
 }
 
 static void platform_close_application () {
+	HWND window = GetActiveWindow ();
+	SetWindowLongPtr (window, GWL_STYLE, WS_OVERLAPPEDWINDOW);
 	PostQuitMessage (0);
 }
 
