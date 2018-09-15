@@ -44,6 +44,10 @@
 #define DIRTY_COLOR 255, 70, 70
 #define SHADOW_COLOR 30, 30, 30
 
+#define CLOSE_COLOR 58, 58, 58
+
+#define MINIMIZE_COLOR 89, 88, 88
+
 #define KEY_ALPHA_0 0x30
 #define KEY_B 		0x42
 #define KEY_D		0x44
@@ -69,6 +73,8 @@
 #define SLIDER_ARROW_RIGHT_PATH "W:\\color\\data\\images\\slider_arrow_right.png"
 #define SWATCH_ARROW_TOP "W:\\color\\data\\images\\swatch_arrow_top.png"
 #define SWATCH_ARROW_BOTTOM "W:\\color\\data\\images\\swatch_arrow_bottom.png"
+#define CLOSE_ICON "W:\\color\\data\\images\\close_icon.png"
+#define MINIMIZE_ICON "W:\\color\\data\\images\\minimize_icon.png"
 
 #define MAIN_FONT "W:\\color\\data\\fonts\\consola.ttf"
 
@@ -441,7 +447,7 @@ void app_init (lc_memory* memory, platform_api platform, int client_width, int c
 	app -> current_swatch_index = -1;
 
 	// Load images used for UI
-	char image_paths[UI_COUNT][PATH_MAX] = { SLIDER_ARROW_LEFT_PATH, SLIDER_ARROW_RIGHT_PATH, SWATCH_ARROW_TOP, SWATCH_ARROW_BOTTOM };
+	char image_paths[UI_COUNT][PATH_MAX] = { SLIDER_ARROW_LEFT_PATH, SLIDER_ARROW_RIGHT_PATH, SWATCH_ARROW_TOP, SWATCH_ARROW_BOTTOM, CLOSE_ICON, MINIMIZE_ICON };
 	for (int i = 0; i < UI_COUNT; ++i) {
 		int n;
 		app -> platform.log ("Loading %s...", image_paths[i]);
@@ -469,6 +475,8 @@ void app_update (lc_memory* memory, lc_input input) {
 
 	handle_input (app, input);
 
+	lc_color white_color = make_colorb (DEFAULT_COLOR);
+
 	lc_color clear_color = make_colorb (CLEAR_COLOR);
 	opengl_clear (app -> client_width, app -> client_height, clear_color);
 
@@ -483,9 +491,23 @@ void app_update (lc_memory* memory, lc_input input) {
 
 	char title[] = { TITLE };
 	lc_color shadow_color = make_colorb (SHADOW_COLOR);
-	lc_color text_color = make_colorb (DEFAULT_COLOR);
-	opengl_text (10, app -> client_height - 21, text_color, shadow_color, app -> main_font, title, true);
+	opengl_text (10, app -> client_height - 21, white_color, shadow_color, app -> main_font, title, true);
 
+	lc_color close_button_color = make_colorb (CLOSE_COLOR);
+	lc_rect close_button_rect = { };
+	close_button_rect.width = TITLE_BAR_HEIGHT;
+	close_button_rect.height = TITLE_BAR_HEIGHT;
+	close_button_rect.x = app -> client_width - close_button_rect.width;
+	close_button_rect.y = app -> client_height;
+	opengl_rect (close_button_rect, close_button_color);
+	opengl_rect (close_button_rect, white_color, app -> ui_images[UI_CLOSE]);
+
+	lc_color minimize_button_color = make_colorb (MINIMIZE_COLOR);
+	lc_rect minimize_button_rect = close_button_rect; 
+	minimize_button_rect.x -= TITLE_BAR_HEIGHT;
+	opengl_rect (minimize_button_rect, minimize_button_color);
+	opengl_rect (minimize_button_rect, white_color, app -> ui_images[UI_MINIMIZE]);
+	
 	// COLOR DISPLAY
 	lc_rect main_color_rect = { };
 	main_color_rect.width = (app -> client_width - (2 * MAJOR_MARGIN)) / 2;
