@@ -42,6 +42,7 @@
 #define DEFAULT_COLOR 255, 255, 255 
 #define HANDLE_COLOR 220, 220, 220
 #define DIRTY_COLOR 255, 70, 70
+#define SHADOW_COLOR 30, 30, 30
 
 #define KEY_ALPHA_0 0x30
 #define KEY_B 		0x42
@@ -70,6 +71,8 @@
 #define SWATCH_ARROW_BOTTOM "W:\\color\\data\\images\\swatch_arrow_bottom.png"
 
 #define MAIN_FONT "W:\\color\\data\\fonts\\consola.ttf"
+
+#define TITLE "Laser Color"
 
 enum change_direction { D_INCREASE = 1, D_DECREASE = -1 };
 enum color_conversion_format { CF_BYTE, CF_FLOAT, CF_HEX };
@@ -469,6 +472,7 @@ void app_update (lc_memory* memory, lc_input input) {
 	lc_color clear_color = make_colorb (CLEAR_COLOR);
 	opengl_clear (app -> client_width, app -> client_height, clear_color);
 
+	// TITLE BAR
 	lc_color title_bar_color = make_colorb (TITLE_BAR_COLOR);
 	lc_rect title_bar_rect = { };
 	title_bar_rect.width = app -> client_width;
@@ -477,6 +481,12 @@ void app_update (lc_memory* memory, lc_input input) {
 	title_bar_rect.y = app -> client_height;
 	opengl_rect (title_bar_rect, title_bar_color);
 
+	char title[] = { TITLE };
+	lc_color shadow_color = make_colorb (SHADOW_COLOR);
+	lc_color text_color = make_colorb (DEFAULT_COLOR);
+	opengl_text (10, app -> client_height - 21, text_color, shadow_color, app -> main_font, title, true);
+
+	// COLOR DISPLAY
 	lc_rect main_color_rect = { };
 	main_color_rect.width = (app -> client_width - (2 * MAJOR_MARGIN)) / 2;
 	main_color_rect.height = COLOR_RECT_HEIGHT;
@@ -492,22 +502,7 @@ void app_update (lc_memory* memory, lc_input input) {
 	prev_color_rect.y = main_color_rect.y;
 	opengl_rect (prev_color_rect, prev_color);
 
-	lc_color status_bar_color = make_colorb (STATUS_BAR_COLOR);
-	lc_rect status_bar_rect = { };
-	status_bar_rect.width = app -> client_width;
-	status_bar_rect.height = STATUS_BAR_HEIGHT;
-	status_bar_rect.x = 0;
-	status_bar_rect.y = STATUS_BAR_HEIGHT;
-	opengl_rect (status_bar_rect, status_bar_color);
-
-	lc_color swatch_bar_color = make_colorb (SWATCH_BAR_COLOR);
-	lc_rect swatch_bar_rect = { };
-	swatch_bar_rect.width = app -> client_width;
-	swatch_bar_rect.height = SWATCH_BAR_HEIGHT;
-	swatch_bar_rect.x = 0;
-	swatch_bar_rect.y = SWATCH_BAR_HEIGHT + STATUS_BAR_HEIGHT; 
-	opengl_rect (swatch_bar_rect, swatch_bar_color);
-
+	// SLIDERS
 	draw_slider (app, main_color_rect.y - main_color_rect.height - MAJOR_MARGIN,
 				 make_colorb (RED_SLIDER_COLOR), 255, color_component_f2b (app -> current_color.r),
 				 app -> current_component == &app -> current_color.r);
@@ -518,17 +513,29 @@ void app_update (lc_memory* memory, lc_input input) {
 				 make_colorb (BLUE_SLIDER_COLOR), 255, color_component_f2b (app -> current_color.b),
 				 app -> current_component == &app -> current_color.b);
 
+	// SWATCHES
+	lc_color swatch_bar_color = make_colorb (SWATCH_BAR_COLOR);
+	lc_rect swatch_bar_rect = { };
+	swatch_bar_rect.width = app -> client_width;
+	swatch_bar_rect.height = SWATCH_BAR_HEIGHT;
+	swatch_bar_rect.x = 0;
+	swatch_bar_rect.y = SWATCH_BAR_HEIGHT + STATUS_BAR_HEIGHT; 
+	opengl_rect (swatch_bar_rect, swatch_bar_color);
+
 	for (int i = 0; i < app -> color_swatches.count; ++i) {
 		draw_color_swatch (app, MAJOR_MARGIN + ((SWATCH_WIDTH + MINOR_MARGIN) * i), 
 						   swatch_bar_rect.y - MAJOR_MARGIN, app -> color_swatches.colors[i], 
 						   app -> current_swatch_index == i);
 	}
 
-	char text[13] = { "Laser Color\0" };
-	lc_color shadow_color = make_colorb (30, 30, 30);
-	opengl_text (11, app -> client_height - 21, shadow_color, app -> main_font, text);
-	lc_color text_color = make_colorb (DEFAULT_COLOR);
-	opengl_text (10, app -> client_height - 20, text_color, app -> main_font, text);
+	// STATUS BAR
+	lc_color status_bar_color = make_colorb (STATUS_BAR_COLOR);
+	lc_rect status_bar_rect = { };
+	status_bar_rect.width = app -> client_width;
+	status_bar_rect.height = STATUS_BAR_HEIGHT;
+	status_bar_rect.x = 0;
+	status_bar_rect.y = STATUS_BAR_HEIGHT;
+	opengl_rect (status_bar_rect, status_bar_color);
 
 	// if (app -> color_library_is_dirty) {
 	// 	lc_color dirty_color = make_colorb (DIRTY_COLOR);
