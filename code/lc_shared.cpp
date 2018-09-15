@@ -79,5 +79,5 @@ int get_kerning (lc_font font, char left, char right) {
 	FT_Vector kern;
 	FT_Get_Kerning (face, left, right, FT_KERNING_DEFAULT, &kern);
 
-	return kern.x;
+	return kern.x >> 6;
 }
