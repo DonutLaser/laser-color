@@ -43,6 +43,7 @@
 #define HANDLE_COLOR 220, 220, 220
 #define DIRTY_COLOR 255, 70, 70
 #define SHADOW_COLOR 30, 30, 30
+#define SLIDER_TEXT_COLOR 221, 221, 221
 
 #define CLOSE_COLOR 58, 58, 58
 #define CLOSE_HIGHLIGHT_COLOR 185, 60, 60
@@ -391,6 +392,12 @@ static void draw_slider (lc_app* app, int y_position, lc_color main_color, float
 	colored_rect.x = rect.x;
 	colored_rect.y = rect.y;
 	opengl_rect (colored_rect, main_color);
+
+	char value_text[4];
+	sprintf_s (value_text, "%d\0", (int)value);
+	lc_color text_color = make_colorb (SLIDER_TEXT_COLOR);
+	lc_color shadow_color = make_colorb (SHADOW_COLOR);
+	opengl_text (rect.x + 10, rect.y - 16, text_color, shadow_color, app -> main_font, value_text, true);
 }
 
 static void draw_color_swatch (lc_app* app, int x_position, int y_position, lc_color color, bool is_selected) {
