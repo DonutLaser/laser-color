@@ -3,6 +3,7 @@
 
 #include "lc_shared.h"
 #include "lc_platform.h"
+#include "lc_font.h"
 
 #define PATH_MAX 128 
 

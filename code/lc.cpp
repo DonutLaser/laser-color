@@ -372,14 +372,14 @@ static void draw_slider (lc_app* app, int y_position, lc_color main_color, float
 		arrow_rect_left.height = left_arrow.height;
 		arrow_rect_left.x = 0;
 		arrow_rect_left.y = rect.y;
-		opengl_rect (arrow_rect_left, arrow_color, left_arrow);
+		opengl_image (arrow_rect_left, arrow_color, left_arrow);
 
 		lc_rect arrow_rect_right = { };
 		arrow_rect_right.width = right_arrow.width;
 		arrow_rect_right.height = right_arrow.height;
 		arrow_rect_right.x = MAJOR_MARGIN + rect.width;
 		arrow_rect_right.y = rect.y;
-		opengl_rect (arrow_rect_right, arrow_color, right_arrow);
+		opengl_image (arrow_rect_right, arrow_color, right_arrow);
 
 		draw_outline (rect);
 	}
@@ -417,14 +417,14 @@ static void draw_color_swatch (lc_app* app, int x_position, int y_position, lc_c
 		arrow_rect_top.height = top_arrow.height;
 		arrow_rect_top.x = rect.x;
 		arrow_rect_top.y = y_position + MAJOR_MARGIN;
-		opengl_rect (arrow_rect_top, arrow_color, top_arrow);
+		opengl_image (arrow_rect_top, arrow_color, top_arrow);
 
 		lc_rect arrow_rect_bottom = { };
 		arrow_rect_bottom.width = bottom_arrow.width;
 		arrow_rect_bottom.height = bottom_arrow.height;
 		arrow_rect_bottom.x = rect.x;
 		arrow_rect_bottom.y = y_position - rect.height;
-		opengl_rect (arrow_rect_bottom, arrow_color, bottom_arrow);
+		opengl_image (arrow_rect_bottom, arrow_color, bottom_arrow);
 
 		draw_outline (rect);
 	}
@@ -451,7 +451,7 @@ static bool draw_button (lc_app* app, int x_position, int y_position, int width,
 		actual_color = color;
 
 	opengl_rect (rect, actual_color);
-	opengl_rect (rect, make_colorb (DEFAULT_COLOR), icon);
+	opengl_image (rect, make_colorb (DEFAULT_COLOR), icon);
 
 	return result;
 }
@@ -506,7 +506,7 @@ void app_init (lc_memory* memory, platform_api platform, int client_width, int c
 	
 	// Load font
 	app -> platform.log ("Loading the %s font...", MAIN_FONT);
-	if (!load_font (MAIN_FONT, MAJOR_FONT_SIZE, &app -> main_font))
+	if (!font_load (MAIN_FONT, MAJOR_FONT_SIZE, &app -> main_font))
 		app -> platform.log ("...Unable to load the font.");
 	else
 		app -> platform.log ("...Success!");
@@ -618,4 +618,6 @@ void app_close (lc_memory* memory) {
 
 	free (app -> color_library_file.path);
 	app -> platform.close_file (app -> color_library_file.handle);
+
+	font_cleanup (app -> main_font);
 }
