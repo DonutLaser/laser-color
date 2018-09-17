@@ -20,6 +20,8 @@
 
 // Get rid of these globals someday 
 static HANDLE global_log_file;
+static int title_bar_width;
+static int title_bar_height;
 
 static int string_length (const char* str) {
 	int result = 0;
@@ -126,6 +128,20 @@ static void platform_minimize_application () {
 	ShowWindow (GetActiveWindow (), SW_MINIMIZE);
 }
 
+static void platform_move_window (int new_x, int new_y) {
+	HWND window = GetActiveWindow ();
+	SetWindowPos (window, 0, new_x, new_y, 0, 0, SWP_NOZORDER | SWP_NOSIZE);
+}
+
+static void platform_get_window_position (int* result_x, int* result_y) {
+	HWND window = GetActiveWindow ();
+	RECT client_rect;
+	GetWindowRect (window, &client_rect);
+
+	*result_x = client_rect.left;
+	*result_y = client_rect.top;
+}
+
 static bool initialize_open_gl (HWND window, int client_width, int client_height) {
 	HDC device_context = GetDC (window);
 	PIXELFORMATDESCRIPTOR format = { };
@@ -169,6 +185,22 @@ static LRESULT CALLBACK window_proc (HWND window, UINT msg, WPARAM wParam, LPARA
 			}
 
 			return 0;
+		}
+		case WM_NCHITTEST: {
+			LRESULT hit = DefWindowProc (window, msg, wParam, lParam);
+
+			POINT pt = { GET_X_LPARAM (lParam), GET_Y_LPARAM (lParam) };
+			ScreenToClient (window, &pt);
+
+			RECT title_bar = { };
+			title_bar.top = 0;
+			title_bar.left = 0;
+			title_bar.right = title_bar_width;
+			title_bar.bottom = title_bar_height;
+			if (hit == HTCLIENT && PtInRect (&title_bar, pt))
+				return HTCAPTION;
+
+			return hit;
 		}
 	}
 
@@ -239,11 +271,13 @@ int CALLBACK WinMain (HINSTANCE hInstance, HINSTANCE prevInstance,
 			api.copy_to_clipboard = platform_copy_to_clipboard;
 			api.close_application = platform_close_application;
 			api.minimize_application = platform_minimize_application;
+			api.move_application_window = platform_move_window;
+			api.get_window_position = platform_get_window_position;
 
 			char documents_path[PATH_MAX];
 			SHGetFolderPath (NULL, CSIDL_MYDOCUMENTS, NULL, SHGFP_TYPE_CURRENT, documents_path);
 
-			app_init (&app_memory, api, client_width, client_height, documents_path);
+			app_init (&app_memory, api, client_width, client_height, documents_path, &title_bar_width, &title_bar_height);
 
 			HCURSOR default_cursor = LoadCursor (NULL, IDC_ARROW);
 			SetCursor (default_cursor);
@@ -287,15 +321,11 @@ int CALLBACK WinMain (HINSTANCE hInstance, HINSTANCE prevInstance,
 						break;
 					}
 					case WM_LBUTTONDOWN: {
-						input.left_mouse_button_down = true;
-						// input.mouse_x = GET_X_LPARAM (msg.lParam);
-						// input.mouse_y = GET_Y_LPARAM (msg.lParam);
+						input.mouse.lmb_down = true;
 						break;
 					}
 					case WM_LBUTTONUP: {
-						input.left_mouse_button_up = true;
-						// input.mouse_x = GET_X_LPARAM (msg.lParam);
-						// input.mouse_y = GET_Y_LPARAM (msg.lParam);
+						input.mouse.lmb_up = true;
 						break;
 					}
 					default: {
@@ -305,11 +335,16 @@ int CALLBACK WinMain (HINSTANCE hInstance, HINSTANCE prevInstance,
 					}
 				}
 
+				// Get mouse position relative to the screen
 				POINT mouse_position;
 				GetCursorPos (&mouse_position);
+				input.mouse.screen_x = mouse_position.x;
+				input.mouse.screen_y = mouse_position.y;
+
+				// Get mouse position relative to the application window
 				ScreenToClient (window, &mouse_position);
-				input.mouse_x = mouse_position.x;
-				input.mouse_y = mouse_position.y;
+				input.mouse.x = mouse_position.x;
+				input.mouse.y = mouse_position.y;
 
 				app_update (&app_memory, input);
 				SwapBuffers (device_context);

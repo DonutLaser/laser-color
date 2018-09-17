@@ -19,13 +19,19 @@ struct lc_file {
 	char* path;
 };
 
+struct lc_mouse {
+	int x;
+	int y;
+	int screen_x;
+	int screen_y;
+	bool lmb_down;
+	bool lmb_up;
+};
+
 struct lc_input {
 	int key;
 	int modifier;
-	int mouse_x;
-	int mouse_y;
-	bool left_mouse_button_down;
-	bool left_mouse_button_up;
+	lc_mouse mouse;
 };
 
 struct lc_color_library {
@@ -52,7 +58,7 @@ struct lc_app {
 	platform_api platform;
 };
 
-void app_init (lc_memory* memory, platform_api platform, int client_width, int client_height, char* documents);
+void app_init (lc_memory* memory, platform_api platform, int client_width, int client_height, char* documents, int* title_bar_width, int* title_bar_height);
 void app_update (lc_memory* memory, lc_input input);
 void app_close (lc_memory* memory);
 

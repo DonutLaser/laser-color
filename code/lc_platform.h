@@ -28,6 +28,12 @@ typedef CLOSE_APP(close_application);
 #define MINIMIZE_APP(name) void name()
 typedef MINIMIZE_APP(minimize_application);
 
+#define MOVE_WINDOW(name) void name(int new_x, int new_y)
+typedef MOVE_WINDOW(move_window);
+
+#define GET_WINDOW_POSITION(name) void name(int* result_x, int* result_y)
+typedef GET_WINDOW_POSITION(get_window_position);
+
 struct platform_api {
 	open_file* 				open_file;
 	write_file* 			write_file;	
@@ -39,6 +45,8 @@ struct platform_api {
 
 	close_application* 		close_application;
 	minimize_application* 	minimize_application;
+	move_window*			move_application_window;
+	get_window_position*	get_window_position;
 };
 
 #endif

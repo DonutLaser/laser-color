@@ -260,9 +260,6 @@ static void load_color_library (lc_app* app) {
 }
 
 static void handle_input (lc_app* app, lc_input input) {
-	// Convert the coordinate from 0,0 at the top to 0,0 at the bottom
-	input.mouse_y = app -> client_height - input.mouse_y;
-
 	switch (input.key) {
 		case KEY_J: 
 		case KEY_K: {
@@ -428,7 +425,7 @@ static void draw_color_swatch (lc_app* app, int x_position, int y_position, lc_c
 	opengl_rect (rect, color);
 }
 
-static bool draw_button (lc_app* app, int x_position, int y_position, int width, int height, lc_color color, lc_color highlight_color, lc_color pressed_color, lc_image icon, lc_input mouse) {
+static bool draw_button (lc_app* app, int x_position, int y_position, int width, int height, lc_color color, lc_color highlight_color, lc_color pressed_color, lc_image icon, lc_input input) {
 	bool result = false;
 	lc_rect rect = { };
 	rect.width = width;
@@ -437,10 +434,10 @@ static bool draw_button (lc_app* app, int x_position, int y_position, int width,
 	rect.y = y_position;
 
 	lc_color actual_color;
-	if (is_point_in_rect (rect, mouse.mouse_x, mouse.mouse_y)) {
-		actual_color = mouse.left_mouse_button_down ? pressed_color : highlight_color;
+	if (is_point_in_rect (rect, input.mouse.x, input.mouse.y)) {
+		actual_color = input.mouse.lmb_down ? pressed_color : highlight_color;
 
-		if (mouse.left_mouse_button_up)
+		if (input.mouse.lmb_up)
 			result = true;
 	}
 	else
@@ -452,7 +449,7 @@ static bool draw_button (lc_app* app, int x_position, int y_position, int width,
 	return result;
 }
 
-void app_init (lc_memory* memory, platform_api platform, int client_width, int client_height, char* documents) {
+void app_init (lc_memory* memory, platform_api platform, int client_width, int client_height, char* documents, int* title_bar_width, int* title_bar_height) {
 	lc_app* app = (lc_app*)memory -> storage;
 	app -> platform = platform;
 
@@ -464,6 +461,8 @@ void app_init (lc_memory* memory, platform_api platform, int client_width, int c
 
 	app -> client_width = client_width;
 	app -> client_height = client_height;
+	*title_bar_width = client_width - (2 * TITLE_BAR_HEIGHT);
+	*title_bar_height = TITLE_BAR_HEIGHT;
 
 	app -> color_swatches = { };
 
@@ -510,7 +509,8 @@ void app_update (lc_memory* memory, lc_input input) {
 	lc_app* app = (lc_app*)memory -> storage;
 
 	// Convert the coordinate from 0,0 at the top to 0,0 at the bottom
-	input.mouse_y = app -> client_height - input.mouse_y;
+	input.mouse.y = app -> client_height - input.mouse.y;
+
 	handle_input (app, input);
 
 	lc_color white_color = make_colorb (DEFAULT_COLOR);
@@ -542,21 +542,6 @@ void app_update (lc_memory* memory, lc_input input) {
 				 app -> ui_images[UI_MINIMIZE], input)) {
 		app -> platform.minimize_application ();
 	} 
-
-	// lc_color close_button_color = make_colorb (CLOSE_COLOR);
-	// lc_rect close_button_rect = { };
-	// close_button_rect.width = TITLE_BAR_HEIGHT;
-	// close_button_rect.height = TITLE_BAR_HEIGHT;
-	// close_button_rect.x = app -> client_width - close_button_rect.width;
-	// close_button_rect.y = app -> client_height;
-	// opengl_rect (close_button_rect, close_button_color);
-	// opengl_rect (close_button_rect, white_color, app -> ui_images[UI_CLOSE]);
-
-	// lc_color minimize_button_color = make_colorb (MINIMIZE_COLOR);
-	// lc_rect minimize_button_rect = close_button_rect; 
-	// minimize_button_rect.x -= TITLE_BAR_HEIGHT;
-	// opengl_rect (minimize_button_rect, minimize_button_color);
-	// opengl_rect (minimize_button_rect, white_color, app -> ui_images[UI_MINIMIZE]);
 
 	// COLOR DISPLAY
 	lc_rect main_color_rect = { };
