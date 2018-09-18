@@ -64,7 +64,8 @@ int font_get_text_width (lc_font font, char* text) {
 	while (*text != '\0') {
 		lc_font_character c = font.chars[*text];
 
-		result += c.bitmap.size.x;
+		result += c.advance >> 6;
+		// result += c.bitmap.size.x + (c.advance >> 6);
 		++text;
 	}
 

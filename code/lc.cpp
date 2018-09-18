@@ -397,7 +397,9 @@ static void draw_slider (lc_app* app, int y_position, lc_color main_color, float
 	sprintf_s (value_text, "%d\0", (int)value);
 	lc_color text_color = make_colorb (SLIDER_TEXT_COLOR);
 	lc_color shadow_color = make_colorb (SHADOW_COLOR);
-	opengl_text (rect, text_color, shadow_color, app -> main_font, value_text, AS_CENTER);
+	lc_rect text_rect = rect;
+	text_rect.y -= 16;
+	opengl_text (text_rect, text_color, shadow_color, app -> main_font, value_text, AS_CENTER);
 }
 
 static void draw_color_swatch (lc_app* app, vector2 position, lc_color color, bool is_selected) {
