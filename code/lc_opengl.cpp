@@ -69,7 +69,18 @@ static void draw_texture (lc_rect rect, lc_color color) {
 static void draw_text (lc_rect rect, lc_color color, lc_font font, char* text, align_style alignment) {
     glPixelStorei (GL_UNPACK_ALIGNMENT, 1);
 
-    int x_start = baseline_x;
+    int x_start = 0;
+
+    if (alignment == AS_LEFT)
+        x_start = rect.x;
+    else {
+        char* text_copy = text;
+        int width = font_get_text_width (font, text_copy);
+
+        x_start = alignment == AS_CENTER ? (rect.x + (rect.width / 2)) - (width / 2) :
+            (rect.x + rect.width) - width;
+    }
+
     char previous = 0;
     while (*text != '\0') {
         lc_font_character c = font.chars[*text];

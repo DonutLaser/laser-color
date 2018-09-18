@@ -3,6 +3,8 @@
 
 #include "lc_shared.h"
 
+enum align_style { AS_LEFT, AS_CENTER, AS_RIGHT };
+
 struct lc_font_character {
 	lc_image bitmap;
 	vector2 offset;
