@@ -3,6 +3,8 @@
 
 enum write_mode { WM_OVERWRITE, WM_APPEND };
 
+union vector2;
+
 // Setting up the function pointers
 #define OPEN_FILE(name) void* name(const char* file_name)
 typedef OPEN_FILE(open_file);
@@ -28,10 +30,10 @@ typedef CLOSE_APP(close_application);
 #define MINIMIZE_APP(name) void name()
 typedef MINIMIZE_APP(minimize_application);
 
-#define MOVE_WINDOW(name) void name(int new_x, int new_y)
+#define MOVE_WINDOW(name) void name(vector2 new_position)
 typedef MOVE_WINDOW(move_window);
 
-#define GET_WINDOW_POSITION(name) void name(int* result_x, int* result_y)
+#define GET_WINDOW_POSITION(name) void name(vector2* title_bar_size)
 typedef GET_WINDOW_POSITION(get_window_position);
 
 struct platform_api {

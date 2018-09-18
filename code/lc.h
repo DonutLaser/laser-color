@@ -21,10 +21,8 @@ struct lc_file {
 };
 
 struct lc_mouse {
-	int x;
-	int y;
-	int screen_x;
-	int screen_y;
+	vector2 position;
+	vector2 screen_position;
 	bool lmb_down;
 	bool lmb_up;
 };
@@ -41,7 +39,7 @@ struct lc_color_library {
 };
 
 struct lc_app {
-	int client_width, client_height;
+	vector2 client_size;
 
 	lc_color current_color;
 	lc_color previous_color;
@@ -59,7 +57,7 @@ struct lc_app {
 	platform_api platform;
 };
 
-void app_init (lc_memory* memory, platform_api platform, int client_width, int client_height, char* documents, int* title_bar_width, int* title_bar_height);
+void app_init (lc_memory* memory, platform_api platform, vector2 client_size, char* documents, vector2* title_bar_size);
 void app_update (lc_memory* memory, lc_input input);
 void app_close (lc_memory* memory);
 

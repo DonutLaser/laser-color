@@ -11,7 +11,7 @@
 
 static GLuint texture_handles; // Only one for now
 
-static void opengl_set_screenspace (int width, int height) {
+static void opengl_set_screenspace (vector2 size) {
     glMatrixMode (GL_TEXTURE);
     glLoadIdentity ();
 
@@ -19,8 +19,8 @@ static void opengl_set_screenspace (int width, int height) {
     glLoadIdentity();
 
     glMatrixMode(GL_PROJECTION);
-    float a = 2.0f / width;
-    float b = 2.0f / height;
+    float a = 2.0f / size.x;
+    float b = 2.0f / size.y;
     float projection[] = {
     	 a,  0,  0,  0,
     	 0,  b,  0,  0,
@@ -66,7 +66,7 @@ static void draw_texture (lc_rect rect, lc_color color) {
     glDisable (GL_TEXTURE_2D);
 }
 
-static void draw_text (int baseline_x, int baseline_y, lc_color color, lc_font font, char* text) {
+static void draw_text (lc_rect rect, lc_color color, lc_font font, char* text, align_style alignment) {
     glPixelStorei (GL_UNPACK_ALIGNMENT, 1);
 
     int x_start = baseline_x;
@@ -78,12 +78,12 @@ static void draw_text (int baseline_x, int baseline_y, lc_color color, lc_font f
 
         lc_rect char_rect = { };
         char_rect.x = x_start;
-        char_rect.y = baseline_y + c.offset_y;
-        char_rect.width = c.bitmap.width;
-        char_rect.height = c.bitmap.height;
+        char_rect.y = rect.y + c.offset.y;
+        char_rect.width = c.bitmap.size.x;
+        char_rect.height = c.bitmap.size.y;
 
         glBindTexture (GL_TEXTURE_2D, texture_handles);
-        glTexImage2D (GL_TEXTURE_2D, 0, GL_ALPHA, c.bitmap.width, c.bitmap.height, 0, GL_ALPHA, GL_UNSIGNED_BYTE, c.bitmap.data);
+        glTexImage2D (GL_TEXTURE_2D, 0, GL_ALPHA, c.bitmap.size.x, c.bitmap.size.y, 0, GL_ALPHA, GL_UNSIGNED_BYTE, c.bitmap.data);
 
         draw_texture (char_rect, color);
 
@@ -97,14 +97,14 @@ static void draw_text (int baseline_x, int baseline_y, lc_color color, lc_font f
     }
 }
 
-void opengl_init (int width, int height) {
+void opengl_init (vector2 size) {
     glGenTextures (1, &texture_handles);
 
-    opengl_set_screenspace (width, height);
+    opengl_set_screenspace (size);
 }
 
-void opengl_clear (int width, int height, lc_color color) {
-	glViewport (0, 0, width, height);
+void opengl_clear (vector2 size, lc_color color) {
+	glViewport (0, 0, size.x, size.y);
 	glClearColor (color.r, color.g, color.b, 1.0f);
 	glClear (GL_COLOR_BUFFER_BIT);
 }
@@ -127,16 +127,17 @@ void opengl_rect (lc_rect rect, lc_color color) {
 
 void opengl_image (lc_rect rect, lc_color color, lc_image image) {
     glBindTexture (GL_TEXTURE_2D, texture_handles);
-    glTexImage2D (GL_TEXTURE_2D, 0, GL_RGBA8, image.width, image.height, 0, GL_RGBA, GL_UNSIGNED_BYTE, image.data);
+    glTexImage2D (GL_TEXTURE_2D, 0, GL_RGBA8, image.size.x, image.size.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, image.data);
 
     draw_texture (rect, color);
 
     glBindTexture (GL_TEXTURE_2D, 0);
 }
 
-void opengl_text (int baseline_x, int baseline_y, lc_color color, lc_color shadow_color, lc_font font, char* text, bool shadow) {
-    if (shadow) 
-        draw_text (baseline_x, baseline_y - 1, shadow_color, font, text);
+void opengl_text (lc_rect rect, lc_color color, lc_color shadow_color, lc_font font, char* text, align_style alignment) {
+    lc_rect shadow_rect = rect;
+    --shadow_rect.y;
 
-    draw_text (baseline_x, baseline_y, color, font, text);
+    draw_text (shadow_rect, shadow_color, font, text, alignment);
+    draw_text (rect, color, font, text, alignment);
 }

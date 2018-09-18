@@ -22,20 +22,18 @@ bool font_load (const char* font_path, int pixel_size, lc_font* result) {
 			continue;
 
 		lc_font_character new_char = { };
-		new_char.offset_x = font -> glyph -> bitmap_left;
-		new_char.offset_y = font -> glyph -> bitmap_top;
+		new_char.offset = { font -> glyph -> bitmap_left, font -> glyph -> bitmap_top };
 		new_char.advance = font -> glyph -> advance.x;
 
-		int w = font -> glyph -> bitmap.width;
-		int h = font -> glyph -> bitmap.rows;
 		new_char.bitmap = { };
-		new_char.bitmap.width = w;
-		new_char.bitmap.height = h;
+		new_char.bitmap.size = { (int)font -> glyph -> bitmap.width, (int)font -> glyph -> bitmap.rows };
 
-		new_char.bitmap.data = malloc (w * h);
-		for (int i = 0; i < new_char.bitmap.height; ++i) {
-			for (int j = 0; j < new_char.bitmap.width; ++j)
-				((byte*)new_char.bitmap.data)[(w * i) + j] = font -> glyph -> bitmap.buffer[(w * i) + j];
+		new_char.bitmap.data = malloc ((int)(new_char.bitmap.size.x * new_char.bitmap.size.y));
+		for (int i = 0; i < new_char.bitmap.size.y; ++i) {
+			for (int j = 0; j < new_char.bitmap.size.x; ++j) {
+				((byte*)new_char.bitmap.data)[((int)new_char.bitmap.size.x * i) + j] = 
+					font -> glyph -> bitmap.buffer[((int)new_char.bitmap.size.x * i) + j];
+			}
 		}
 
 		result -> chars[c] = new_char;
@@ -66,7 +64,7 @@ int font_get_text_width (lc_font font, char* text) {
 	while (*text != '\0') {
 		lc_font_character c = font.chars[*text];
 
-		result += c.bitmap.width;
+		result += c.bitmap.size.x;
 		++text;
 	}
 

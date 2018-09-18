@@ -3,6 +3,15 @@
 
 #define byte unsigned char
 
+union vector2 {
+	struct {
+		int x;
+		int y;
+	};
+
+	int values[2];
+};
+
 struct lc_rect {
 	int x;
 	int y;
@@ -11,8 +20,7 @@ struct lc_rect {
 };
 
 struct lc_image { 
-	int width;
-	int height;
+	vector2 size;
 
 	void* data;
 };

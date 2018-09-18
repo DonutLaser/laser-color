@@ -88,9 +88,9 @@
 enum change_direction { D_INCREASE = 1, D_DECREASE = -1 };
 enum color_conversion_format { CF_BYTE, CF_FLOAT, CF_HEX };
 
-static bool is_point_in_rect (lc_rect rect, int x, int y) {
-	return x >= rect.x && x <= rect.x + rect.width &&
-		y <= rect.y && y >= rect.y - rect.height;
+static bool is_point_in_rect (lc_rect rect, vector2 point) {
+	return point.x >= rect.x && point.x <= rect.x + rect.width &&
+		point.y <= rect.y && point.y >= rect.y - rect.height;
 }
 
 static byte string_to_byte (char* str) {
@@ -357,7 +357,7 @@ static void draw_outline (lc_rect rect) {
 static void draw_slider (lc_app* app, int y_position, lc_color main_color, float max, float value, bool is_selected) {
 	lc_color base_color = make_colorb (SLIDER_BASE_COLOR);
 	lc_rect rect = { };
-	rect.width = app -> client_width - (2 * MAJOR_MARGIN);
+	rect.width = app -> client_size.x - (2 * MAJOR_MARGIN);
 	rect.height = SLIDER_HEIGHT;
 	rect.x = MAJOR_MARGIN;
 	rect.y = y_position;
@@ -368,15 +368,15 @@ static void draw_slider (lc_app* app, int y_position, lc_color main_color, float
 
 		lc_color arrow_color = make_colorb (DEFAULT_COLOR);
 		lc_rect arrow_rect_left = { };
-		arrow_rect_left.width = left_arrow.width;
-		arrow_rect_left.height = left_arrow.height;
+		arrow_rect_left.width = left_arrow.size.x;
+		arrow_rect_left.height = left_arrow.size.y;
 		arrow_rect_left.x = 0;
 		arrow_rect_left.y = rect.y;
 		opengl_image (arrow_rect_left, arrow_color, left_arrow);
 
 		lc_rect arrow_rect_right = { };
-		arrow_rect_right.width = right_arrow.width;
-		arrow_rect_right.height = right_arrow.height;
+		arrow_rect_right.width = right_arrow.size.x;
+		arrow_rect_right.height = right_arrow.size.y;
 		arrow_rect_right.x = MAJOR_MARGIN + rect.width;
 		arrow_rect_right.y = rect.y;
 		opengl_image (arrow_rect_right, arrow_color, right_arrow);
@@ -397,15 +397,15 @@ static void draw_slider (lc_app* app, int y_position, lc_color main_color, float
 	sprintf_s (value_text, "%d\0", (int)value);
 	lc_color text_color = make_colorb (SLIDER_TEXT_COLOR);
 	lc_color shadow_color = make_colorb (SHADOW_COLOR);
-	opengl_text (rect.x + 10, rect.y - 16, text_color, shadow_color, app -> main_font, value_text, true);
+	opengl_text (rect, text_color, shadow_color, app -> main_font, value_text, AS_CENTER);
 }
 
-static void draw_color_swatch (lc_app* app, int x_position, int y_position, lc_color color, bool is_selected) {
+static void draw_color_swatch (lc_app* app, vector2 position, lc_color color, bool is_selected) {
 	lc_rect rect = { };
 	rect.width = SWATCH_WIDTH;
 	rect.height = SWATCH_HEIGHT;
-	rect.x = x_position;
-	rect.y = y_position;
+	rect.x = position.x;
+	rect.y = position.y;
 
 	if (is_selected) {
 		lc_image top_arrow = app -> ui_images[UI_SWATCH_ARROW_TOP];
@@ -413,17 +413,17 @@ static void draw_color_swatch (lc_app* app, int x_position, int y_position, lc_c
 
 		lc_color arrow_color = make_colorb (DEFAULT_COLOR);
 		lc_rect arrow_rect_top = { };
-		arrow_rect_top.width = top_arrow.width;
-		arrow_rect_top.height = top_arrow.height;
+		arrow_rect_top.width = top_arrow.size.x;
+		arrow_rect_top.height = top_arrow.size.y;
 		arrow_rect_top.x = rect.x;
-		arrow_rect_top.y = y_position + MAJOR_MARGIN;
+		arrow_rect_top.y = position.y + MAJOR_MARGIN;
 		opengl_image (arrow_rect_top, arrow_color, top_arrow);
 
 		lc_rect arrow_rect_bottom = { };
-		arrow_rect_bottom.width = bottom_arrow.width;
-		arrow_rect_bottom.height = bottom_arrow.height;
+		arrow_rect_bottom.width = bottom_arrow.size.x;
+		arrow_rect_bottom.height = bottom_arrow.size.y;
 		arrow_rect_bottom.x = rect.x;
-		arrow_rect_bottom.y = y_position - rect.height;
+		arrow_rect_bottom.y = position.y- rect.height;
 		opengl_image (arrow_rect_bottom, arrow_color, bottom_arrow);
 
 		draw_outline (rect);
@@ -432,16 +432,11 @@ static void draw_color_swatch (lc_app* app, int x_position, int y_position, lc_c
 	opengl_rect (rect, color);
 }
 
-static bool draw_button (lc_app* app, int x_position, int y_position, int width, int height, lc_color color, lc_color highlight_color, lc_color pressed_color, lc_image icon, lc_input input) {
+static bool draw_button (lc_app* app, lc_rect rect, lc_color color, lc_color highlight_color, lc_color pressed_color, lc_image icon, lc_input input) {
 	bool result = false;
-	lc_rect rect = { };
-	rect.width = width;
-	rect.height = height;
-	rect.x = x_position;
-	rect.y = y_position;
 
 	lc_color actual_color;
-	if (is_point_in_rect (rect, input.mouse.x, input.mouse.y)) {
+	if (is_point_in_rect (rect, input.mouse.position)) {
 		actual_color = input.mouse.lmb_down ? pressed_color : highlight_color;
 
 		if (input.mouse.lmb_up)
@@ -456,7 +451,7 @@ static bool draw_button (lc_app* app, int x_position, int y_position, int width,
 	return result;
 }
 
-void app_init (lc_memory* memory, platform_api platform, int client_width, int client_height, char* documents, int* title_bar_width, int* title_bar_height) {
+void app_init (lc_memory* memory, platform_api platform, vector2 client_size, char* documents, vector2* title_bar_size) {
 	lc_app* app = (lc_app*)memory -> storage;
 	app -> platform = platform;
 
@@ -466,10 +461,8 @@ void app_init (lc_memory* memory, platform_api platform, int client_width, int c
 	app -> current_component = &app -> current_color.r;
 	app -> current_component_index = 0;
 
-	app -> client_width = client_width;
-	app -> client_height = client_height;
-	*title_bar_width = client_width - (2 * TITLE_BAR_HEIGHT);
-	*title_bar_height = TITLE_BAR_HEIGHT;
+	app -> client_size = client_size;
+	*title_bar_size = { client_size.x - (2 * TITLE_BAR_HEIGHT), TITLE_BAR_HEIGHT };
 
 	app -> color_swatches = { };
 
@@ -494,8 +487,8 @@ void app_init (lc_memory* memory, platform_api platform, int client_width, int c
 		int n;
 		app -> platform.log ("Loading %s...", image_paths[i]);
 		app -> ui_images[i].data = (void*)stbi_load (image_paths[i],
-													 &app -> ui_images[i].width,
-													 &app -> ui_images[i].height,
+													 &app -> ui_images[i].size.x,
+													 &app -> ui_images[i].size.y,
 													 &n, 0);
 
 		if (app -> ui_images[i].data)
@@ -516,46 +509,53 @@ void app_update (lc_memory* memory, lc_input input) {
 	lc_app* app = (lc_app*)memory -> storage;
 
 	// Convert the coordinate from 0,0 at the top to 0,0 at the bottom
-	input.mouse.y = app -> client_height - input.mouse.y;
+	input.mouse.position.y = app -> client_size.y - input.mouse.position.y;
 
 	handle_input (app, input);
 
 	lc_color white_color = make_colorb (DEFAULT_COLOR);
 
 	lc_color clear_color = make_colorb (CLEAR_COLOR);
-	opengl_clear (app -> client_width, app -> client_height, clear_color);
+	opengl_clear (app -> client_size, clear_color);
 
 	// TITLE BAR
 	lc_color title_bar_color = make_colorb (TITLE_BAR_COLOR);
 	lc_rect title_bar_rect = { };
-	title_bar_rect.width = app -> client_width;
+	title_bar_rect.width = app -> client_size.x;
 	title_bar_rect.height = TITLE_BAR_HEIGHT;
 	title_bar_rect.x = 0;
-	title_bar_rect.y = app -> client_height;
+	title_bar_rect.y = app -> client_size.y;
 	opengl_rect (title_bar_rect, title_bar_color);
 
 	char title[] = { TITLE };
 	lc_color shadow_color = make_colorb (SHADOW_COLOR);
-	opengl_text (10, app -> client_height - 21, white_color, shadow_color, app -> main_font, title, true);
+	lc_rect title_rect = { 10, app -> client_size.y - 21,
+						   title_bar_rect.width, title_bar_rect.height};
+	opengl_text (title_rect, white_color, shadow_color, app -> main_font, title, AS_LEFT);
 
-	if (draw_button (app, app -> client_width - TITLE_BAR_HEIGHT, app -> client_height, TITLE_BAR_HEIGHT, TITLE_BAR_HEIGHT,
-				 make_colorb (CLOSE_COLOR), make_colorb (CLOSE_HIGHLIGHT_COLOR), make_colorb (CLOSE_PRESSED_COLOR), 
-				 app -> ui_images[UI_CLOSE], input)) {
+	lc_rect close_button_rect = { };
+	close_button_rect.x = app -> client_size.x - TITLE_BAR_HEIGHT;
+	close_button_rect.y = app -> client_size.y;
+	close_button_rect.width = TITLE_BAR_HEIGHT;
+	close_button_rect.height = TITLE_BAR_HEIGHT;
+	if (draw_button (app, close_button_rect, make_colorb (CLOSE_COLOR), make_colorb (CLOSE_HIGHLIGHT_COLOR), 
+					 make_colorb (CLOSE_PRESSED_COLOR), app -> ui_images[UI_CLOSE], input)) {
 		app -> platform.close_application ();
 	}
 
-	if (draw_button (app, app -> client_width - (2 * TITLE_BAR_HEIGHT), app -> client_height, TITLE_BAR_HEIGHT, TITLE_BAR_HEIGHT,
-				 make_colorb (MINIMIZE_COLOR), make_colorb (MINIMIZE_HIGHLIGHT_COLOR), make_colorb (MINIMIZE_PRESSED_COLOR), 
-				 app -> ui_images[UI_MINIMIZE], input)) {
+	lc_rect minimize_button_rect = close_button_rect;
+	minimize_button_rect.x -= TITLE_BAR_HEIGHT;
+	if (draw_button (app, minimize_button_rect, make_colorb (MINIMIZE_COLOR), make_colorb (MINIMIZE_HIGHLIGHT_COLOR), 
+					 make_colorb (MINIMIZE_PRESSED_COLOR), app -> ui_images[UI_MINIMIZE], input)) {
 		app -> platform.minimize_application ();
 	} 
 
 	// COLOR DISPLAY
 	lc_rect main_color_rect = { };
-	main_color_rect.width = (app -> client_width - (2 * MAJOR_MARGIN)) / 2;
+	main_color_rect.width = (app -> client_size.x - (2 * MAJOR_MARGIN)) / 2;
 	main_color_rect.height = COLOR_RECT_HEIGHT;
 	main_color_rect.x = MAJOR_MARGIN;
-	main_color_rect.y = app -> client_height - TITLE_BAR_HEIGHT - MAJOR_MARGIN;
+	main_color_rect.y = app -> client_size.y - TITLE_BAR_HEIGHT - MAJOR_MARGIN;
 	opengl_rect (main_color_rect, app -> current_color);
 
 	lc_color prev_color = app -> previous_color;
@@ -580,22 +580,22 @@ void app_update (lc_memory* memory, lc_input input) {
 	// SWATCHES
 	lc_color swatch_bar_color = make_colorb (SWATCH_BAR_COLOR);
 	lc_rect swatch_bar_rect = { };
-	swatch_bar_rect.width = app -> client_width;
+	swatch_bar_rect.width = app -> client_size.x;
 	swatch_bar_rect.height = SWATCH_BAR_HEIGHT;
 	swatch_bar_rect.x = 0;
 	swatch_bar_rect.y = SWATCH_BAR_HEIGHT + STATUS_BAR_HEIGHT; 
 	opengl_rect (swatch_bar_rect, swatch_bar_color);
 
 	for (int i = 0; i < app -> color_swatches.count; ++i) {
-		draw_color_swatch (app, MAJOR_MARGIN + ((SWATCH_WIDTH + MINOR_MARGIN) * i), 
-						   swatch_bar_rect.y - MAJOR_MARGIN, app -> color_swatches.colors[i], 
-						   app -> current_swatch_index == i);
+		vector2 position = { MAJOR_MARGIN + ((SWATCH_WIDTH + MINOR_MARGIN) * i),
+										  swatch_bar_rect.y - MAJOR_MARGIN };
+		draw_color_swatch (app, position, app -> color_swatches.colors[i], app -> current_swatch_index == i);
 	}
 
 	// STATUS BAR
 	lc_color status_bar_color = make_colorb (STATUS_BAR_COLOR);
 	lc_rect status_bar_rect = { };
-	status_bar_rect.width = app -> client_width;
+	status_bar_rect.width = app -> client_size.x;
 	status_bar_rect.height = STATUS_BAR_HEIGHT;
 	status_bar_rect.x = 0;
 	status_bar_rect.y = STATUS_BAR_HEIGHT;

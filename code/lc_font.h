@@ -5,8 +5,7 @@
 
 struct lc_font_character {
 	lc_image bitmap;
-	int offset_x;
-	int offset_y;
+	vector2 offset;
 	int advance;
 };
 
