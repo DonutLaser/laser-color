@@ -124,7 +124,6 @@ static void platform_close_application () {
 
 static void platform_minimize_application () {
 	HWND window = GetActiveWindow ();
-	SetWindowLongPtr (window, GWL_STYLE, WS_OVERLAPPEDWINDOW);
 	ShowWindow (GetActiveWindow (), SW_MINIMIZE);
 }
 
@@ -177,14 +176,6 @@ static LRESULT CALLBACK window_proc (HWND window, UINT msg, WPARAM wParam, LPARA
 			PostQuitMessage (0);
 			return 0;
 		}
-		case WM_SIZE: {
-			if (wParam == SIZE_RESTORED) {
-				SetWindowLongPtr (window, GWL_STYLE, WS_POPUP);
-				ShowWindow (window, SW_RESTORE);
-			}
-
-			return 0;
-		}
 		case WM_NCHITTEST: {
 			LRESULT hit = DefWindowProc (window, msg, wParam, lParam);
 
@@ -201,6 +192,13 @@ static LRESULT CALLBACK window_proc (HWND window, UINT msg, WPARAM wParam, LPARA
 
 			return hit;
 		}
+		case WM_NCCALCSIZE: { 
+			// The key to making a window borderless and have proper animations,
+			// have the ability to minimize it with Win + M or clicking in the
+			// task bar. WS_POPUP window style doesn't allow these.
+			// Animations can be worked around, but minimization cannot.
+			return 0;
+		}
 	}
 
 	return DefWindowProc (window, msg, wParam, lParam);
@@ -216,7 +214,7 @@ int CALLBACK WinMain (HINSTANCE hInstance, HINSTANCE prevInstance,
 	platform_log (true, "Opening Laser Color Picker...");
 
 	WNDCLASS wndClass = { };
-	wndClass.style = CS_HREDRAW | CS_OWNDC | CS_VREDRAW | CS_DROPSHADOW;
+	wndClass.style = CS_HREDRAW | CS_VREDRAW;
 	wndClass.lpfnWndProc = window_proc;
 	wndClass.hInstance = hInstance;
 	wndClass.hIcon = LoadIcon (wndClass.hInstance, MAKEINTRESOURCE (101));
@@ -225,13 +223,14 @@ int CALLBACK WinMain (HINSTANCE hInstance, HINSTANCE prevInstance,
 	if (RegisterClass (&wndClass)) {
 		platform_log (false, "Creating a window of size %dx%d...", WINDOW_WIDTH, WINDOW_HEIGHT);
 		HWND window = CreateWindow ("Laser Color", "Laser Color",
-									WS_POPUP, 
+									WS_OVERLAPPEDWINDOW,
 									INITIAL_WINDOW_X, INITIAL_WINDOW_Y,
 									WINDOW_WIDTH, WINDOW_HEIGHT,
 									0, 0, hInstance, 0);
 
 		if (window) {
 			platform_log (true, " Success.");
+
 			HDC device_context = GetDC (window);
 
 			RECT client_rect;
@@ -350,8 +349,6 @@ int CALLBACK WinMain (HINSTANCE hInstance, HINSTANCE prevInstance,
 			ReleaseDC (window, device_context);
 
 			app_close (&app_memory);
-
-			SetWindowLongPtr (window, GWL_STYLE, WS_OVERLAPPEDWINDOW);
 		}
 		else
 			platform_log (true, "Couldn't create a window. Aborting.");
