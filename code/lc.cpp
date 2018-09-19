@@ -128,7 +128,6 @@ static void copy_color_to_clipboard (lc_app* app, const char* format, lc_color c
 		sprintf_s (buffer, buffer_size, format, color.r, color.g, color.b);
 
 	app -> platform.copy_to_clipboard (buffer);
-	app -> platform.log ("Copied '%s' into the clipboard.", buffer);
 }
 
 static void change_color_component_value (float* component, float amount, change_direction direction) {
@@ -197,13 +196,13 @@ static void save_color_library (lc_app* app) {
 	
 	int bytes_written = 0;
 
-	app -> platform.log ("Found %d colors in the library", app -> color_swatches.count);
+	app -> platform.log (false, "Found %d colors in the library", app -> color_swatches.count);
 	if (app -> color_swatches.count == 0) {
-		app -> platform.log (" ");
+		app -> platform.log (true, "Nothing to save.");
 		return;
 	}
 	else
-		app -> platform.log ("Saving...");
+		app -> platform.log (false, "Saving...");
 
 	for (int i = 0; i < app -> color_swatches.count; ++i) {
 		byte r = color_component_f2b (app -> color_swatches.colors[i].r);
@@ -215,9 +214,9 @@ static void save_color_library (lc_app* app) {
 	}
 
 	if (app -> platform.write_file (app -> color_library_file.handle, buffer, bytes_written, WM_OVERWRITE))
-		app -> platform.log ("Color library successfully saved at %s.", app -> color_library_file.path);
+		app -> platform.log (true, " Success. Saved at %s.", app -> color_library_file.path);
 	else
-		app -> platform.log ("Unexpected error when saving the color library at %s.", app -> color_library_file.path);
+		app -> platform.log ("Could not write into %s.", app -> color_library_file.path);
 }
 
 static void load_color_library (lc_app* app) {
@@ -254,10 +253,10 @@ static void load_color_library (lc_app* app) {
 		}
 
 		if (app -> color_swatches.count != 0)
-			app -> platform.log ("Successfully added %d colors to the library", app -> color_swatches.count);
+			app -> platform.log (true, "Successfully added %d colors to the library", app -> color_swatches.count);
 	}
 	else
-		app -> platform.log ("Could not read the color library file.");
+		app -> platform.log (true, "Could not read the color library file.");
 }
 
 static void handle_input (lc_app* app, lc_input input) {
@@ -270,12 +269,10 @@ static void handle_input (lc_app* app, lc_input input) {
 			break;
 		}
 		case KEY_I: {
-			if (add_color_to_color_library (app, app -> current_color)) {
+			if (add_color_to_color_library (app, app -> current_color))
 				app -> color_library_is_dirty = true;
-				app -> platform.log ("Successfully added new color to the library.");
-			}
 			else
-				app -> platform.log ("New color could not be added to the library. Library is full.");
+				app -> platform.log (true, "New color could not be added to the library. Library is full.");
 
 			break;
 		}
@@ -457,7 +454,7 @@ void app_init (lc_memory* memory, platform_api platform, vector2 client_size, ch
 	lc_app* app = (lc_app*)memory -> storage;
 	app -> platform = platform;
 
-	app -> platform.log ("Initializing application...");
+	app -> platform.log (true, "Initializing application...");
 	app -> current_color = make_colorb (DEFAULT_COLOR);
 	app -> previous_color = app -> current_color;
 	app -> current_component = &app -> current_color.r;
@@ -473,13 +470,13 @@ void app_init (lc_memory* memory, platform_api platform, vector2 client_size, ch
 	app -> color_library_file.handle = app -> platform.open_file (app -> color_library_file.path);
 
 	if (app -> color_library_file.handle) {
-		app -> platform.log ("Color library file was successfully opened.");
-		app -> platform.log ("Loading color library...");
+		app -> platform.log (true, "Color library file was successfully opened.");
+		app -> platform.log (false, "Loading color library...");
 		load_color_library (app);
-		app -> platform.log ("Color library loaded.");
+		app -> platform.log (true, " Success.");
 	}
 	else
-		app -> platform.log ("Error opening the color library file.");
+		app -> platform.log (true, "Could not open the color library file.");
 
 	app -> current_swatch_index = -1;
 
@@ -487,24 +484,24 @@ void app_init (lc_memory* memory, platform_api platform, vector2 client_size, ch
 	char image_paths[UI_COUNT][PATH_MAX] = { SLIDER_ARROW_LEFT_PATH, SLIDER_ARROW_RIGHT_PATH, SWATCH_ARROW_TOP, SWATCH_ARROW_BOTTOM, CLOSE_ICON, MINIMIZE_ICON };
 	for (int i = 0; i < UI_COUNT; ++i) {
 		int n;
-		app -> platform.log ("Loading %s...", image_paths[i]);
+		app -> platform.log (false, "Loading %s...", image_paths[i]);
 		app -> ui_images[i].data = (void*)stbi_load (image_paths[i],
 													 &app -> ui_images[i].size.x,
 													 &app -> ui_images[i].size.y,
 													 &n, 0);
 
 		if (app -> ui_images[i].data)
-			app -> platform.log ("...Sucesss!");
+			app -> platform.log (true, " Sucesss!");
 		else
-			app -> platform.log ("...Unable to load the image!");
+			app -> platform.log (true, " Unable to load the image!");
 	}
 	
 	// Load font
-	app -> platform.log ("Loading the %s font...", MAIN_FONT);
+	app -> platform.log (false, "Loading the %s font...", MAIN_FONT);
 	if (!font_load (MAIN_FONT, MAJOR_FONT_SIZE, &app -> main_font))
-		app -> platform.log ("...Unable to load the font.");
+		app -> platform.log (true, " Unable to load the font.");
 	else
-		app -> platform.log ("...Success!");
+		app -> platform.log (true, " Success!");
 }
 
 void app_update (lc_memory* memory, lc_input input) {

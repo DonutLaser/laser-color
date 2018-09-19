@@ -81,7 +81,7 @@ static bool platform_read_file (HANDLE file_handle, char** text, unsigned* size)
 	return success;
 }
 
-static void platform_log (const char* format, ...) {
+static void platform_log (bool new_line, const char* format, ...) {
 	char message[2048];
 	int bytes_written = 0;
 
@@ -89,7 +89,9 @@ static void platform_log (const char* format, ...) {
 	va_start (arguments, format);
 
 	bytes_written = _vsnprintf_s (message, sizeof (message) - 1, format, arguments);
-	message[bytes_written++] = '\n';
+
+	if (new_line)
+		message[bytes_written++] = '\n';
 
 	if (bytes_written > 0)
 		platform_write_file (global_log_file, message, bytes_written, WM_APPEND);
@@ -158,7 +160,7 @@ static bool initialize_open_gl (HWND window, vector2 client_size) {
 
 	HGLRC gl_context = wglCreateContext (device_context);
 	if (!wglMakeCurrent (device_context, gl_context)) {
-		platform_log ("Wasn't able to initialize OpenGL rendering context.Exiting...\n");
+		platform_log (true, "Wasn't able to initialize OpenGL rendering context. Exiting.");
 		return false;
 	}
 
@@ -211,7 +213,7 @@ int CALLBACK WinMain (HINSTANCE hInstance, HINSTANCE prevInstance,
 	global_log_file = platform_open_file ("output.log");
 	platform_clear_file (global_log_file);
 
-	platform_log ("Opening Laser Color Picker...\n");
+	platform_log (true, "Opening Laser Color Picker...");
 
 	WNDCLASS wndClass = { };
 	wndClass.style = CS_HREDRAW | CS_OWNDC | CS_VREDRAW | CS_DROPSHADOW;
@@ -221,7 +223,7 @@ int CALLBACK WinMain (HINSTANCE hInstance, HINSTANCE prevInstance,
 	wndClass.lpszClassName = "Laser Color";
 
 	if (RegisterClass (&wndClass)) {
-		platform_log ("Creating a window of size %dx%d", WINDOW_WIDTH, WINDOW_HEIGHT);
+		platform_log (false, "Creating a window of size %dx%d...", WINDOW_WIDTH, WINDOW_HEIGHT);
 		HWND window = CreateWindow ("Laser Color", "Laser Color",
 									WS_POPUP, 
 									INITIAL_WINDOW_X, INITIAL_WINDOW_Y,
@@ -229,6 +231,7 @@ int CALLBACK WinMain (HINSTANCE hInstance, HINSTANCE prevInstance,
 									0, 0, hInstance, 0);
 
 		if (window) {
+			platform_log (true, " Success.");
 			HDC device_context = GetDC (window);
 
 			RECT client_rect;
@@ -236,9 +239,9 @@ int CALLBACK WinMain (HINSTANCE hInstance, HINSTANCE prevInstance,
 			vector2 client_size = { client_rect.right - client_rect.left, client_rect.bottom - client_rect.top };
 
 			if (initialize_open_gl (window, client_size))
-				platform_log ("Initialized OpenGL rendering context.");
+				platform_log (true, "Initialized OpenGL rendering context.");
 			else {
-				platform_log ("Wasn't able to initialize OpenGL rendering context.Exiting...");
+				platform_log (true, "Wasn't able to initialize OpenGL rendering context. Exiting.");
 				return -1;
 			}
 
@@ -254,7 +257,7 @@ int CALLBACK WinMain (HINSTANCE hInstance, HINSTANCE prevInstance,
 													PAGE_READWRITE);
 
 			if (!app_memory.storage) {
-				platform_log ("Could not allocate %d bytes of memory for the application. Exiting...", app_memory.storage_size);
+				platform_log (true, "Could not allocate %d bytes of memory for the application. Exiting.", app_memory.storage_size);
 				return 0;
 			}
 
@@ -351,10 +354,10 @@ int CALLBACK WinMain (HINSTANCE hInstance, HINSTANCE prevInstance,
 			SetWindowLongPtr (window, GWL_STYLE, WS_OVERLAPPEDWINDOW);
 		}
 		else
-			platform_log ("Windows couldn't create a window. Aborting...");
+			platform_log (true, "Couldn't create a window. Aborting.");
 	}
 
-	platform_log ("Closing Laser Color Picker...");
+	platform_log (true, "Closing Laser Color Picker...");
 
 	platform_close_file (global_log_file);
 	return 0;

@@ -18,7 +18,7 @@ typedef READ_FILE(read_file);
 #define CLOSE_FILE(name) void name(void* file_handle)
 typedef CLOSE_FILE(close_file);
 // Perhaps log shouldn't be specific to a platform?
-#define LOG(name) void name(const char* format, ...)
+#define LOG(name) void name(bool new_line, const char* format, ...)
 typedef LOG(log_message);
 
 #define COPY_TO_CLIPBOARD(name) void name(const char* text)
