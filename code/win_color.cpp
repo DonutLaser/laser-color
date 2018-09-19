@@ -117,7 +117,6 @@ static void platform_copy_to_clipboard (const char* text) {
 
 static void platform_close_application () {
 	HWND window = GetActiveWindow ();
-	SetWindowLongPtr (window, GWL_STYLE, WS_OVERLAPPEDWINDOW);
 	PostQuitMessage (0);
 }
 
@@ -348,6 +347,8 @@ int CALLBACK WinMain (HINSTANCE hInstance, HINSTANCE prevInstance,
 			ReleaseDC (window, device_context);
 
 			app_close (&app_memory);
+
+			SetWindowLongPtr (window, GWL_STYLE, WS_OVERLAPPEDWINDOW);
 		}
 		else
 			platform_log ("Windows couldn't create a window. Aborting...");
