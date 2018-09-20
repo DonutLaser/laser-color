@@ -319,11 +319,11 @@ int CALLBACK WinMain (HINSTANCE hInstance, HINSTANCE prevInstance,
 						break;
 					}
 					case WM_LBUTTONDOWN: {
-						input.mouse.lmb_down = true;
+						input.mouse.state = LMB_DOWN;
 						break;
 					}
 					case WM_LBUTTONUP: {
-						input.mouse.lmb_up = true;
+						input.mouse.state = LMB_UP;
 						break;
 					}
 					default: {

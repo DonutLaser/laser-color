@@ -13,6 +13,7 @@
 struct lc_memory;
 
 enum input_modifier { M_CTRL = 0x01, M_SHIFT = 0x02, M_ALT = 0x04, M_CAPS = 0x08, M_NONE = 0x00 };
+enum mouse_state { LMB_DOWN = 0x01, LMB_UP = 0x02 };
 enum ui_images { UI_SLIDER_ARROW_LEFT, UI_SLIDER_ARROW_RIGHT, UI_SWATCH_ARROW_TOP, UI_SWATCH_ARROW_BOTTOM, UI_CLOSE, UI_MINIMIZE, UI_COUNT };
 
 struct lc_file {
@@ -23,8 +24,7 @@ struct lc_file {
 struct lc_mouse {
 	vector2 position;
 	vector2 screen_position;
-	bool lmb_down;
-	bool lmb_up;
+	int state;
 };
 
 struct lc_input {

@@ -436,9 +436,9 @@ static bool draw_button (lc_app* app, lc_rect rect, lc_color color, lc_color hig
 
 	lc_color actual_color;
 	if (is_point_in_rect (rect, input.mouse.position)) {
-		actual_color = input.mouse.lmb_down ? pressed_color : highlight_color;
+		actual_color = input.mouse.state == LMB_DOWN? pressed_color : highlight_color;
 
-		if (input.mouse.lmb_up)
+		if (input.mouse.state == LMB_UP)
 			result = true;
 	}
 	else
