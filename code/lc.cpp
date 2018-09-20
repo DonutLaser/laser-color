@@ -29,6 +29,7 @@
 #define SWATCH_BAR_HEIGHT 54 
 #define OUTLINE_WIDTH 2
 #define MAJOR_FONT_SIZE 15 
+#define MINOR_FONT_SIZE 10 
 
 #define CLEAR_COLOR 175, 175, 175 
 #define TITLE_BAR_COLOR 118, 118, 118
@@ -141,42 +142,42 @@ static void toggle_color_component (float* component) {
 
 static void change_color_swatch (lc_app* app, change_direction direction, bool switch_to_newly_added_swatch = false) {
 	if (app -> color_samples.count == 0) {
-		app -> current_swatch_index = -1;
+		app -> current_sample_index = -1;
 		return;
 	}
 
 	if (switch_to_newly_added_swatch) {
-		app -> current_swatch_index = app -> color_samples.count - 1;
+		app -> current_sample_index = app -> color_samples.count - 1;
 		app -> previous_color = app -> current_color;
 		return;
 	}
 
-	app -> current_swatch_index += (int)direction;
-	if (app -> current_swatch_index == app -> color_samples.count)
-		app -> current_swatch_index = 0;
-	else if (app -> current_swatch_index < 0)
-		app -> current_swatch_index = app -> color_samples.count - 1;
+	app -> current_sample_index += (int)direction;
+	if (app -> current_sample_index == app -> color_samples.count)
+		app -> current_sample_index = 0;
+	else if (app -> current_sample_index < 0)
+		app -> current_sample_index = app -> color_samples.count - 1;
 
-	app -> current_color = app -> color_samples.samples[app -> current_swatch_index];
+	app -> current_color = app -> color_samples.samples[app -> current_sample_index];
 	app -> previous_color = app -> current_color;
 }
 
 static void replace_selected_swatch (lc_app* app) {
-	app -> color_samples.samples[app -> current_swatch_index] = app -> current_color;
+	app -> color_samples.samples[app -> current_sample_index] = app -> current_color;
 }
 
 static void remove_selected_swatch (lc_app* app) {
-	for (int i = app -> current_swatch_index; i < app -> color_samples.count - 1; ++i)
+	for (int i = app -> current_sample_index; i < app -> color_samples.count - 1; ++i)
 		app -> color_samples.samples[i] = app -> color_samples.samples[i + 1];
 
 	--app -> color_samples.count;
 
-	if (app -> current_swatch_index == app -> color_samples.count)
+	if (app -> current_sample_index == app -> color_samples.count)
 		change_color_swatch (app, D_DECREASE);
 }
 
 static void make_selected_swatch_current_color (lc_app* app) {
-	app -> current_color = app -> color_samples.samples[app -> current_swatch_index];
+	app -> current_color = app -> color_samples.samples[app -> current_sample_index];
 }
 
 static bool add_color_to_color_library (lc_app* app, lc_color color) {
@@ -396,7 +397,7 @@ static void draw_slider (lc_app* app, int y_position, lc_color main_color, float
 	lc_color shadow_color = make_colorb (SHADOW_COLOR);
 	lc_rect text_rect = rect;
 	text_rect.y -= 16;
-	opengl_text (text_rect, text_color, shadow_color, app -> main_font, value_text, AS_CENTER);
+	opengl_text (text_rect, text_color, shadow_color, app -> fonts[FT_MAIN], value_text, AS_CENTER);
 }
 
 static void draw_color_swatch (lc_app* app, vector2 position, lc_color color, bool is_selected) {
@@ -478,7 +479,7 @@ void app_init (lc_memory* memory, platform_api platform, vector2 client_size, ch
 	else
 		app -> platform.log (true, "Could not open the color library file.");
 
-	app -> current_swatch_index = -1;
+	app -> current_sample_index = -1;
 
 	// Load images used for UI
 	char image_paths[UI_COUNT][PATH_MAX] = { SLIDER_ARROW_LEFT_PATH, SLIDER_ARROW_RIGHT_PATH, SWATCH_ARROW_TOP, SWATCH_ARROW_BOTTOM, CLOSE_ICON, MINIMIZE_ICON };
@@ -497,11 +498,14 @@ void app_init (lc_memory* memory, platform_api platform, vector2 client_size, ch
 	}
 	
 	// Load font
-	app -> platform.log (false, "Loading the %s font...", MAIN_FONT);
-	if (!font_load (MAIN_FONT, MAJOR_FONT_SIZE, &app -> main_font))
-		app -> platform.log (true, " Unable to load the font.");
-	else
-		app -> platform.log (true, " Success!");
+	int font_sizes[] = { MAJOR_FONT_SIZE, MINOR_FONT_SIZE };
+	for (int i = 0; i < FT_COUNT; ++i) {
+		app -> platform.log (false, "Loading the %s font in size %d...", MAIN_FONT, font_sizes[i]);
+		if (!font_load (MAIN_FONT, font_sizes[i], &app -> fonts[i]))
+			app -> platform.log (true, " Unable to load the font.");
+		else
+			app -> platform.log (true, " Sucess!");
+	}
 }
 
 void app_update (lc_memory* memory, lc_input input) {
@@ -530,7 +534,7 @@ void app_update (lc_memory* memory, lc_input input) {
 	lc_color shadow_color = make_colorb (SHADOW_COLOR);
 	lc_rect title_rect = { 10, app -> client_size.y - 21,
 						   title_bar_rect.width, title_bar_rect.height};
-	opengl_text (title_rect, white_color, shadow_color, app -> main_font, title, AS_LEFT);
+	opengl_text (title_rect, white_color, shadow_color, app -> fonts[FT_MAIN], title, AS_LEFT);
 
 	lc_rect close_button_rect = { };
 	close_button_rect.x = app -> client_size.x - TITLE_BAR_HEIGHT;
@@ -588,7 +592,7 @@ void app_update (lc_memory* memory, lc_input input) {
 	for (int i = 0; i < app -> color_samples.count; ++i) {
 		vector2 position = { MAJOR_MARGIN + ((SWATCH_WIDTH + MINOR_MARGIN) * i),
 										  swatch_bar_rect.y - MAJOR_MARGIN };
-		draw_color_swatch (app, position, app -> color_samples.samples[i], app -> current_swatch_index == i);
+		draw_color_swatch (app, position, app -> color_samples.samples[i], app -> current_sample_index == i);
 	}
 
 	// STATUS BAR
@@ -618,5 +622,6 @@ void app_close (lc_memory* memory) {
 	free (app -> color_library_file.path);
 	app -> platform.close_file (app -> color_library_file.handle);
 
-	font_cleanup (app -> main_font);
+	for (int i = 0; i < FT_COUNT; ++i)
+		font_cleanup (app -> fonts[i]);
 }
