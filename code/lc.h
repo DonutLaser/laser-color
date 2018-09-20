@@ -7,7 +7,7 @@
 
 #define PATH_MAX 128 
 
-#define MAX_COLORS_IN_LIBRARY 11 
+#define MAX_COLORS_IN_LIBRARY 6 
 
 // Forward declarations
 struct lc_memory;

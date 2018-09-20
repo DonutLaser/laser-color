@@ -604,6 +604,14 @@ void app_update (lc_memory* memory, lc_input input) {
 	status_bar_rect.y = STATUS_BAR_HEIGHT;
 	opengl_rect (status_bar_rect, status_bar_color);
 
+	char samples_count_text[15];
+	sprintf_s (samples_count_text, "Samples: %d/%d\0", 
+			   app -> current_sample_index + 1, app -> color_samples.count);
+	lc_color samples_count_color = make_colorb (SLIDER_TEXT_COLOR);
+	lc_rect samples_count_rect = status_bar_rect;
+	samples_count_rect.y -= 10;
+	opengl_text (samples_count_rect, samples_count_color, shadow_color, app -> fonts[FT_SMALL], samples_count_text, AS_RIGHT);
+
 	// if (app -> color_library_is_dirty) {
 	// 	lc_color dirty_color = make_colorb (DIRTY_COLOR);
 	// 	lc_rect dirty_rect = { };
