@@ -140,48 +140,48 @@ static void toggle_color_component (float* component) {
 }
 
 static void change_color_swatch (lc_app* app, change_direction direction, bool switch_to_newly_added_swatch = false) {
-	if (app -> color_swatches.count == 0) {
+	if (app -> color_samples.count == 0) {
 		app -> current_swatch_index = -1;
 		return;
 	}
 
 	if (switch_to_newly_added_swatch) {
-		app -> current_swatch_index = app -> color_swatches.count - 1;
+		app -> current_swatch_index = app -> color_samples.count - 1;
 		app -> previous_color = app -> current_color;
 		return;
 	}
 
 	app -> current_swatch_index += (int)direction;
-	if (app -> current_swatch_index == app -> color_swatches.count)
+	if (app -> current_swatch_index == app -> color_samples.count)
 		app -> current_swatch_index = 0;
 	else if (app -> current_swatch_index < 0)
-		app -> current_swatch_index = app -> color_swatches.count - 1;
+		app -> current_swatch_index = app -> color_samples.count - 1;
 
-	app -> current_color = app -> color_swatches.colors[app -> current_swatch_index];
+	app -> current_color = app -> color_samples.samples[app -> current_swatch_index];
 	app -> previous_color = app -> current_color;
 }
 
 static void replace_selected_swatch (lc_app* app) {
-	app -> color_swatches.colors[app -> current_swatch_index] = app -> current_color;
+	app -> color_samples.samples[app -> current_swatch_index] = app -> current_color;
 }
 
 static void remove_selected_swatch (lc_app* app) {
-	for (int i = app -> current_swatch_index; i < app -> color_swatches.count - 1; ++i)
-		app -> color_swatches.colors[i] = app -> color_swatches.colors[i + 1];
+	for (int i = app -> current_swatch_index; i < app -> color_samples.count - 1; ++i)
+		app -> color_samples.samples[i] = app -> color_samples.samples[i + 1];
 
-	--app -> color_swatches.count;
+	--app -> color_samples.count;
 
-	if (app -> current_swatch_index == app -> color_swatches.count)
+	if (app -> current_swatch_index == app -> color_samples.count)
 		change_color_swatch (app, D_DECREASE);
 }
 
 static void make_selected_swatch_current_color (lc_app* app) {
-	app -> current_color = app -> color_swatches.colors[app -> current_swatch_index];
+	app -> current_color = app -> color_samples.samples[app -> current_swatch_index];
 }
 
 static bool add_color_to_color_library (lc_app* app, lc_color color) {
-	if (app -> color_swatches.count < MAX_COLORS_IN_LIBRARY) {
-		app -> color_swatches.colors[app -> color_swatches.count++] = color;
+	if (app -> color_samples.count < MAX_COLORS_IN_LIBRARY) {
+		app -> color_samples.samples[app -> color_samples.count++] = color;
 
 		change_color_swatch (app, D_INCREASE, true);
 		return true;
@@ -196,18 +196,18 @@ static void save_color_library (lc_app* app) {
 	
 	int bytes_written = 0;
 
-	app -> platform.log (false, "Found %d colors in the library", app -> color_swatches.count);
-	if (app -> color_swatches.count == 0) {
+	app -> platform.log (false, "Found %d colors in the library", app -> color_samples.count);
+	if (app -> color_samples.count == 0) {
 		app -> platform.log (true, "Nothing to save.");
 		return;
 	}
 	else
 		app -> platform.log (false, "Saving...");
 
-	for (int i = 0; i < app -> color_swatches.count; ++i) {
-		byte r = color_component_f2b (app -> color_swatches.colors[i].r);
-		byte g = color_component_f2b (app -> color_swatches.colors[i].g);
-		byte b = color_component_f2b (app -> color_swatches.colors[i].b);
+	for (int i = 0; i < app -> color_samples.count; ++i) {
+		byte r = color_component_f2b (app -> color_samples.samples[i].r);
+		byte g = color_component_f2b (app -> color_samples.samples[i].g);
+		byte b = color_component_f2b (app -> color_samples.samples[i].b);
 
 		bytes_written = sprintf_s (buffer, "%s%d %d %d\n", buffer, r, g, b);
 		buffer[bytes_written] = '\0';
@@ -252,8 +252,8 @@ static void load_color_library (lc_app* app) {
 			++buffer;
 		}
 
-		if (app -> color_swatches.count != 0)
-			app -> platform.log (true, "Successfully added %d colors to the library", app -> color_swatches.count);
+		if (app -> color_samples.count != 0)
+			app -> platform.log (true, "Successfully added %d colors to the library", app -> color_samples.count);
 	}
 	else
 		app -> platform.log (true, "Could not read the color library file.");
@@ -463,7 +463,7 @@ void app_init (lc_memory* memory, platform_api platform, vector2 client_size, ch
 	app -> client_size = client_size;
 	*title_bar_size = { client_size.x - (2 * TITLE_BAR_HEIGHT), TITLE_BAR_HEIGHT };
 
-	app -> color_swatches = { };
+	app -> color_samples = { };
 
 	app -> color_library_file.path = (char*)malloc (sizeof (char) * PATH_MAX);
 	sprintf_s (app -> color_library_file.path, PATH_MAX, "%s/%s", documents, "test_color_library.lclib");
@@ -585,10 +585,10 @@ void app_update (lc_memory* memory, lc_input input) {
 	swatch_bar_rect.y = SWATCH_BAR_HEIGHT + STATUS_BAR_HEIGHT; 
 	opengl_rect (swatch_bar_rect, swatch_bar_color);
 
-	for (int i = 0; i < app -> color_swatches.count; ++i) {
+	for (int i = 0; i < app -> color_samples.count; ++i) {
 		vector2 position = { MAJOR_MARGIN + ((SWATCH_WIDTH + MINOR_MARGIN) * i),
 										  swatch_bar_rect.y - MAJOR_MARGIN };
-		draw_color_swatch (app, position, app -> color_swatches.colors[i], app -> current_swatch_index == i);
+		draw_color_swatch (app, position, app -> color_samples.samples[i], app -> current_swatch_index == i);
 	}
 
 	// STATUS BAR

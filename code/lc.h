@@ -34,7 +34,7 @@ struct lc_input {
 };
 
 struct lc_color_library {
-	lc_color colors[MAX_COLORS_IN_LIBRARY];
+	lc_color samples[MAX_COLORS_IN_LIBRARY];
 	int count;
 };
 
@@ -48,7 +48,7 @@ struct lc_app {
 	int current_swatch_index;
 
 	lc_file color_library_file;
-	lc_color_library color_swatches;
+	lc_color_library color_samples;
 	bool color_library_is_dirty;
 
 	lc_image ui_images[UI_COUNT];
