@@ -291,8 +291,10 @@ static void handle_input (lc_app* app, lc_input input) {
 		case KEY_I: {
 			if (add_color_to_color_library (app, app -> current_color))
 				app -> color_library_is_dirty = true;
-			else
+			else {
 				app -> platform.log (true, "New color could not be added to the library. Library is full.");
+				status_show (&app -> status_bar, "Library is full.");
+			}
 
 			break;
 		}
@@ -320,8 +322,10 @@ static void handle_input (lc_app* app, lc_input input) {
 			break;
 		}
 		case KEY_X: {
-			if (input.modifier & M_CTRL)
+			if (input.modifier & M_CTRL) {
 				copy_color_to_clipboard (app, "#%.2x%.2x%.2x\0", app -> current_color, CF_HEX);
+				status_show (&app -> status_bar, "Copied hex values");
+			}
 			else {
 				remove_selected_swatch (app);
 				app -> color_library_is_dirty = true;
@@ -338,6 +342,7 @@ static void handle_input (lc_app* app, lc_input input) {
 				return;
 
 			copy_color_to_clipboard (app, "%d, %d, %d\0", app -> current_color, CF_BYTE);
+			status_show (&app -> status_bar, "Copied integer values");
 			break;
 		}
 		case KEY_F: {
@@ -345,6 +350,7 @@ static void handle_input (lc_app* app, lc_input input) {
 				return;
 
 			copy_color_to_clipboard (app, "%.1ff, %.1ff, %.1ff\0", app -> current_color, CF_FLOAT);
+			status_show (&app -> status_bar, "Copied percentage values");
 			break;
 		}
 		case KEY_S: { 
@@ -352,6 +358,8 @@ static void handle_input (lc_app* app, lc_input input) {
 				if (app -> color_library_is_dirty) {
 					save_color_library (app);
 					app -> color_library_is_dirty = false;
+
+					status_show (&app -> status_bar, "Library saved.");
 				}
 			}
 
