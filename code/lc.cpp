@@ -42,7 +42,7 @@
 #define GREEN_SLIDER_COLOR 37, 107, 37
 #define BLUE_SLIDER_COLOR 57, 57, 126 
 #define OUTLINE_COLOR 206, 206, 209 
-#define DEFAULT_COLOR 255, 255, 255 
+#define DEFAULT_COLOR 255, 255, 255
 #define HANDLE_COLOR 220, 220, 220
 #define DIRTY_COLOR 204, 68, 68
 #define SHADOW_COLOR 30, 30, 30
@@ -483,8 +483,6 @@ void app_init (lc_memory* memory, platform_api platform, vector2 client_size, ch
 	app -> platform = platform;
 
 	app -> platform.log (true, "Initializing application...");
-	app -> current_color = make_colorb (DEFAULT_COLOR);
-	app -> previous_color = app -> current_color;
 	app -> current_component = &app -> current_color.r;
 	app -> current_component_index = 0;
 
@@ -506,8 +504,19 @@ void app_init (lc_memory* memory, platform_api platform, vector2 client_size, ch
 	else
 		app -> platform.log (true, "Could not open the color library file.");
 
-	app -> current_sample_index = -1;
-	app -> current_screen_sample_index = -1;
+	if (app -> color_samples.count > 0) {
+		app -> current_sample_index = 0;
+		app -> current_color = app -> color_samples.samples[app -> current_sample_index];
+	}
+	else {
+		app -> current_sample_index = 0;
+		app -> current_color = app -> previous_color;
+	}
+	
+	app -> previous_color = make_colorb (DEFAULT_COLOR);
+
+	app -> current_sample_index = app -> color_samples.count > 0 ? 0 : -1;
+	app -> current_screen_sample_index = app -> current_sample_index;
 
 	// Load images used for UI
 	char image_paths[UI_COUNT][PATH_MAX] = { SLIDER_ARROW_LEFT_PATH, SLIDER_ARROW_RIGHT_PATH, SWATCH_ARROW_TOP, SWATCH_ARROW_BOTTOM, CLOSE_ICON, MINIMIZE_ICON };
