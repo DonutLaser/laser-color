@@ -7,6 +7,7 @@
 #include "lc_memory.h"
 #include "lc_opengl.h"
 #include "lc_gui_layout.h"
+#include "lc_status.h"
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "../third_party/stb_image.h"
@@ -527,7 +528,7 @@ void app_init (lc_memory* memory, platform_api platform, vector2 client_size, ch
 	}
 }
 
-void app_update (lc_memory* memory, lc_input input) {
+void app_update (lc_memory* memory, double delta_time, lc_input input) {
 	lc_app* app = (lc_app*)memory -> storage;
 
 	// Convert the coordinate from 0,0 at the top to 0,0 at the bottom
@@ -639,11 +640,19 @@ void app_update (lc_memory* memory, lc_input input) {
 	char samples_count_text[15];
 	sprintf_s (samples_count_text, "Samples: %d/%d\0", 
 			   app -> current_sample_index + 1, app -> color_samples.count);
-	lc_color samples_count_color = make_colorb (SLIDER_TEXT_COLOR);
+	lc_color status_text_color = make_colorb (SLIDER_TEXT_COLOR);
 	lc_rect samples_count_rect = status_bar_rect;
 	samples_count_rect.y -= 10;
-	opengl_text (samples_count_rect, samples_count_color, shadow_color, app -> fonts[FT_SMALL], samples_count_text, AS_RIGHT);
+	opengl_text (samples_count_rect, status_text_color, shadow_color, app -> fonts[FT_SMALL], samples_count_text, AS_RIGHT);
 
+	if (app -> status_bar.show_message) {
+		lc_rect status_message_rect = status_bar_rect;
+		status_message_rect.y -= 10;
+		status_message_rect.x += 7;
+		opengl_text (status_message_rect, status_text_color, shadow_color, app -> fonts[FT_SMALL], app -> status_bar.message, AS_LEFT);
+
+		status_update (&app -> status_bar, delta_time);
+	}
 	// if (app -> color_library_is_dirty) {
 	// 	lc_color dirty_color = make_colorb (DIRTY_COLOR);
 	// 	lc_rect dirty_rect = { };

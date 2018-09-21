@@ -217,6 +217,9 @@ int CALLBACK WinMain (HINSTANCE hInstance, HINSTANCE prevInstance,
 
 	platform_log (true, "Opening Laser Color Picker...");
 
+	LARGE_INTEGER performance_frequency;
+	QueryPerformanceFrequency (&performance_frequency);
+
 	WNDCLASS wndClass = { };
 	wndClass.style = CS_HREDRAW | CS_VREDRAW;
 	wndClass.lpfnWndProc = window_proc;
@@ -286,6 +289,9 @@ int CALLBACK WinMain (HINSTANCE hInstance, HINSTANCE prevInstance,
 
 			ShowWindow (window, cmdShow);
 
+			LARGE_INTEGER last_performance_counter;
+			QueryPerformanceCounter (&last_performance_counter);
+
 			global_running = TRUE;
 			while (global_running) {
 				MSG msg;
@@ -350,8 +356,15 @@ int CALLBACK WinMain (HINSTANCE hInstance, HINSTANCE prevInstance,
 				ScreenToClient (window, &mouse_position);
 				input.mouse.position = { mouse_position.x, mouse_position.y };
 
-				app_update (&app_memory, input);
+				LARGE_INTEGER current_performance_counter;
+				QueryPerformanceCounter (&current_performance_counter);
+				double performance_counter_elapsed = (double)(current_performance_counter.QuadPart - last_performance_counter.QuadPart);
+				double delta_time = performance_counter_elapsed / (double)performance_frequency.QuadPart;
+
+				app_update (&app_memory, delta_time, input);
 				SwapBuffers (device_context);
+
+				last_performance_counter = current_performance_counter;
 			}
 
 			ReleaseDC (window, device_context);

@@ -4,6 +4,7 @@
 #include "lc_shared.h"
 #include "lc_platform.h"
 #include "lc_font.h"
+#include "lc_status.h"
 
 #define PATH_MAX 128 
 
@@ -55,6 +56,8 @@ struct lc_app {
 	lc_color_library color_samples;
 	bool color_library_is_dirty;
 
+	status status_bar;
+
 	lc_image ui_images[UI_COUNT];
 	lc_font fonts[FT_COUNT];
 
@@ -62,7 +65,7 @@ struct lc_app {
 };
 
 void app_init (lc_memory* memory, platform_api platform, vector2 client_size, char* documents, vector2* title_bar_size);
-void app_update (lc_memory* memory, lc_input input);
+void app_update (lc_memory* memory, double delta_time, lc_input input);
 void app_close (lc_memory* memory);
 
 #endif 
