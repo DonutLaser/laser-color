@@ -65,7 +65,6 @@ int font_get_text_width (lc_font font, char* text) {
 		lc_font_character c = font.chars[*text];
 
 		result += c.advance >> 6;
-		// result += c.bitmap.size.x + (c.advance >> 6);
 		++text;
 	}
 
@@ -73,6 +72,10 @@ int font_get_text_width (lc_font font, char* text) {
 }
 
 void font_cleanup (lc_font font) {
-	// FT_Done_Face ((FT_Face)font.freetype_face);
-	FT_Done_FreeType (freetype_lib);
+	FT_Done_Face ((FT_Face)font.freetype_face);
+
+	if (freetype_lib != NULL) {
+		FT_Done_FreeType (freetype_lib);
+		freetype_lib = NULL;
+	}
 }

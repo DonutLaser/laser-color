@@ -7,7 +7,7 @@
 
 #define PATH_MAX 128 
 
-#define MAX_COLORS_IN_LIBRARY 6 
+#define MAX_COLORS_IN_LIBRARY 99 
 
 // Forward declarations
 struct lc_memory;
@@ -47,6 +47,9 @@ struct lc_app {
 	float* current_component;
 	int current_component_index;
 	int current_sample_index;
+	int sample_bar_offset_target;
+	int sample_bar_offset;
+	int current_screen_sample_index;
 
 	lc_file color_library_file;
 	lc_color_library color_samples;

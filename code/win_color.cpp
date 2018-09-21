@@ -20,6 +20,7 @@
 
 // Get rid of these globals someday 
 static HANDLE global_log_file;
+static BOOL global_running;
 static vector2 title_bar_size;
 
 static int string_length (const char* str) {
@@ -118,13 +119,12 @@ static void platform_copy_to_clipboard (const char* text) {
 }
 
 static void platform_close_application () {
-	HWND window = GetActiveWindow ();
-	PostQuitMessage (0);
+	global_running = false;
 }
 
 static void platform_minimize_application () {
 	HWND window = GetActiveWindow ();
-	ShowWindow (GetActiveWindow (), SW_MINIMIZE);
+	ShowWindow (window, SW_MINIMIZE);
 }
 
 static void platform_move_window (vector2 new_position) {
@@ -172,6 +172,10 @@ static bool initialize_open_gl (HWND window, vector2 client_size) {
 
 static LRESULT CALLBACK window_proc (HWND window, UINT msg, WPARAM wParam, LPARAM lParam) {
 	switch (msg) {
+		case WM_CLOSE: {
+			global_running = false;
+			return 0;
+		}
 		case WM_DESTROY: {
 			PostQuitMessage (0);
 			return 0;
@@ -282,57 +286,61 @@ int CALLBACK WinMain (HINSTANCE hInstance, HINSTANCE prevInstance,
 
 			ShowWindow (window, cmdShow);
 
-			BOOL running = TRUE;
-			while (running) {
+			global_running = TRUE;
+			while (global_running) {
 				MSG msg;
-				running = GetMessage (&msg, 0, 0, 0);
-
-				if (!running)
-					break;
+				bool no_messages = !PeekMessage (&msg, window, 0, 0, PM_REMOVE);
 
 				lc_input input = { };
 				input.modifier = M_NONE;
-				switch (msg.message) {
-					case WM_SYSKEYDOWN:
-					case WM_KEYDOWN: {
-						if (GetKeyState (VK_CONTROL) & 0x8000)
-							input.modifier |= M_CTRL ;
-						if (GetKeyState (VK_SHIFT) & 0x8000)
-							input.modifier |= M_SHIFT;
-						if (GetKeyState (VK_MENU) & 0x8000)
-							input.modifier |= M_ALT;
-						if (GetKeyState (VK_CAPITAL) & 0x0001)
-							input.modifier |= M_CAPS;
 
-						switch (msg.wParam) {
-							case VK_F4: {
-								if (input.modifier & M_ALT)
-									platform_close_application ();
-
-								break;
-							}
-							default: {
-								input.key = (int)msg.wParam; 
-								break;
-							}
+				if (!no_messages) {
+					switch (msg.message) {
+						case WM_QUIT: {
+							global_running = false;
+							break;
 						}
-						break;
-					}
-					case WM_LBUTTONDOWN: {
-						input.mouse.state = LMB_DOWN;
-						break;
-					}
-					case WM_LBUTTONUP: {
-						input.mouse.state = LMB_UP;
-						break;
-					}
-					default: {
-						TranslateMessage (&msg);
-						DispatchMessage (&msg);
-						break;
+						case WM_SYSKEYDOWN:
+						case WM_KEYDOWN: {
+							if (GetKeyState (VK_CONTROL) & 0x8000)
+								input.modifier |= M_CTRL ;
+							if (GetKeyState (VK_SHIFT) & 0x8000)
+								input.modifier |= M_SHIFT;
+							if (GetKeyState (VK_MENU) & 0x8000)
+								input.modifier |= M_ALT;
+							if (GetKeyState (VK_CAPITAL) & 0x0001)
+								input.modifier |= M_CAPS;
+
+							switch (msg.wParam) {
+								case VK_F4: {
+									if (input.modifier & M_ALT)
+										platform_close_application ();
+
+									break;
+								}
+								default: {
+									input.key = (int)msg.wParam; 
+									break;
+								}
+							}
+							break;
+						}
+						case WM_LBUTTONDOWN: {
+							input.mouse.state = LMB_DOWN;
+							break;
+						}
+						case WM_LBUTTONUP: {
+							input.mouse.state = LMB_UP;
+							break;
+						}
+						default: {
+							TranslateMessage (&msg);
+							DispatchMessage (&msg);
+							break;
+						}
 					}
 				}
-
+				
 				// Get mouse position relative to the screen
 				POINT mouse_position;
 				GetCursorPos (&mouse_position);

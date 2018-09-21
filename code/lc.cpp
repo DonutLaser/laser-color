@@ -15,6 +15,7 @@
 // #include "../third_party/stb_image_write.h"
 
 #define clamp_value(x, min, max) (x < min) ? min : ((x > max) ? max : x)
+#define abs_value(x) (x < 0) ? (-x) : (x)
 
 #define MAJOR_MARGIN 15
 #define MINOR_MARGIN 8
@@ -72,6 +73,8 @@
 #define SINGLE_STEP 0.00392f // 1/255
 #define MEDIUM_STEP 0.0392f  // 10/255
 #define FULL_STEP 1.0f
+
+#define SAMPLE_SCROLL_SPEED 8
 
 #define BUFFER_SIZE 4096
 
@@ -143,23 +146,38 @@ static void toggle_color_component (float* component) {
 static void change_color_swatch (lc_app* app, change_direction direction, bool switch_to_newly_added_swatch = false) {
 	if (app -> color_samples.count == 0) {
 		app -> current_sample_index = -1;
+		app -> current_screen_sample_index = -1;
 		return;
 	}
 
 	if (switch_to_newly_added_swatch) {
 		app -> current_sample_index = app -> color_samples.count - 1;
 		app -> previous_color = app -> current_color;
-		return;
+		app -> current_screen_sample_index = app -> current_sample_index;
+	} 
+	else {
+		app -> current_sample_index += (int)direction;
+		app -> current_screen_sample_index += direction;
+
+		if (app -> current_sample_index == app -> color_samples.count)
+			app -> current_sample_index = app -> color_samples.count - 1;
+		else if (app -> current_sample_index < 0)
+			app -> current_sample_index = 0;
+
+		app -> current_color = app -> color_samples.samples[app -> current_sample_index];
+		app -> previous_color = app -> current_color;
 	}
 
-	app -> current_sample_index += (int)direction;
-	if (app -> current_sample_index == app -> color_samples.count)
-		app -> current_sample_index = 0;
-	else if (app -> current_sample_index < 0)
-		app -> current_sample_index = app -> color_samples.count - 1;
+	if (app -> current_screen_sample_index > 5)
+		app -> sample_bar_offset_target += app -> current_screen_sample_index - 5;
+	else if (app -> current_screen_sample_index < 0)
+		--app -> sample_bar_offset_target;
 
-	app -> current_color = app -> color_samples.samples[app -> current_sample_index];
-	app -> previous_color = app -> current_color;
+	app -> sample_bar_offset_target = clamp_value (app -> sample_bar_offset_target,
+												   0, (app -> color_samples.count <= 6 ? 
+												   		0 : app -> color_samples.count - 6));
+	app -> current_screen_sample_index = clamp_value (app -> current_screen_sample_index,
+													  0, 5);
 }
 
 static void replace_selected_swatch (lc_app* app) {
@@ -480,6 +498,7 @@ void app_init (lc_memory* memory, platform_api platform, vector2 client_size, ch
 		app -> platform.log (true, "Could not open the color library file.");
 
 	app -> current_sample_index = -1;
+	app -> current_screen_sample_index = -1;
 
 	// Load images used for UI
 	char image_paths[UI_COUNT][PATH_MAX] = { SLIDER_ARROW_LEFT_PATH, SLIDER_ARROW_RIGHT_PATH, SWATCH_ARROW_TOP, SWATCH_ARROW_BOTTOM, CLOSE_ICON, MINIMIZE_ICON };
@@ -589,8 +608,21 @@ void app_update (lc_memory* memory, lc_input input) {
 	swatch_bar_rect.y = SWATCH_BAR_HEIGHT + STATUS_BAR_HEIGHT; 
 	opengl_rect (swatch_bar_rect, swatch_bar_color);
 
+	int sample_width = SWATCH_WIDTH + MINOR_MARGIN;
+	int actual_target = sample_width * app -> sample_bar_offset_target;
+	if (app -> sample_bar_offset > actual_target) {
+		app -> sample_bar_offset -= SAMPLE_SCROLL_SPEED;
+		if (app -> sample_bar_offset < actual_target)
+			app -> sample_bar_offset = actual_target;
+	}
+	else if (app -> sample_bar_offset < actual_target) {
+		app -> sample_bar_offset += SAMPLE_SCROLL_SPEED;
+		if (app -> sample_bar_offset > actual_target)
+			app -> sample_bar_offset = actual_target;
+	}
+
 	for (int i = 0; i < app -> color_samples.count; ++i) {
-		vector2 position = { MAJOR_MARGIN + ((SWATCH_WIDTH + MINOR_MARGIN) * i),
+		vector2 position = { (MAJOR_MARGIN - app -> sample_bar_offset) + (sample_width * i),
 										  swatch_bar_rect.y - MAJOR_MARGIN };
 		draw_color_swatch (app, position, app -> color_samples.samples[i], app -> current_sample_index == i);
 	}
