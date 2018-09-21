@@ -44,7 +44,7 @@
 #define OUTLINE_COLOR 206, 206, 209 
 #define DEFAULT_COLOR 255, 255, 255 
 #define HANDLE_COLOR 220, 220, 220
-#define DIRTY_COLOR 255, 70, 70
+#define DIRTY_COLOR 204, 68, 68
 #define SHADOW_COLOR 30, 30, 30
 #define SLIDER_TEXT_COLOR 221, 221, 221
 
@@ -648,13 +648,14 @@ void app_update (lc_memory* memory, double delta_time, lc_input input) {
 	char samples_count_text[15];
 	sprintf_s (samples_count_text, "Samples: %d/%d\0", 
 			   app -> current_sample_index + 1, app -> color_samples.count);
-	lc_color status_text_color = make_colorb (SLIDER_TEXT_COLOR);
+	lc_color samples_color = app -> color_library_is_dirty ? make_colorb (DIRTY_COLOR) : make_colorb (SLIDER_TEXT_COLOR);
 	lc_rect samples_count_rect = status_bar_rect;
 	samples_count_rect.y -= 10;
-	opengl_text (samples_count_rect, status_text_color, shadow_color, app -> fonts[FT_SMALL], samples_count_text, AS_RIGHT);
+	opengl_text (samples_count_rect, samples_color, shadow_color, app -> fonts[FT_SMALL], samples_count_text, AS_RIGHT);
 
 	if (app -> status_bar.show_message) {
 		lc_rect status_message_rect = status_bar_rect;
+		lc_color status_text_color = make_colorb (SLIDER_TEXT_COLOR);
 		status_message_rect.y -= 10;
 		status_message_rect.x += 7;
 		opengl_text (status_message_rect, status_text_color, shadow_color, app -> fonts[FT_SMALL], app -> status_bar.message, AS_LEFT);
