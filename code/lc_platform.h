@@ -33,7 +33,7 @@ typedef MINIMIZE_APP(minimize_application);
 #define MOVE_WINDOW(name) void name(vector2 new_position)
 typedef MOVE_WINDOW(move_window);
 
-#define GET_WINDOW_POSITION(name) void name(vector2* title_bar_size)
+#define GET_WINDOW_POSITION(name) void name(vector2* result)
 typedef GET_WINDOW_POSITION(get_window_position);
 
 struct platform_api {

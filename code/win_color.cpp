@@ -33,32 +33,30 @@ static int string_length (const char* str) {
 	return result;
 }
 
-static HANDLE platform_open_file (const char* file_name) {
+OPEN_FILE (platform_open_file) {
 	HANDLE file_handle = CreateFile (file_name, GENERIC_READ | GENERIC_WRITE,
 									 FILE_SHARE_READ, NULL, 
 									 OPEN_ALWAYS, 
 									 FILE_ATTRIBUTE_NORMAL,
 									 NULL);
 
-	if (file_handle == INVALID_HANDLE_VALUE) {
-		// Does this ever fail with OPEN_ALWAYS ??? 
+	if (file_handle == INVALID_HANDLE_VALUE)
 		return NULL;
-	}
 
 	return file_handle;
 }
 
-static void platform_close_file (HANDLE file_handle) {
+CLOSE_FILE (platform_close_file) {
 	CloseHandle (file_handle);
 }
 
-static void platform_clear_file (HANDLE file_handle) {
+static void platform_clear_file (void* file_handle) {
 	LARGE_INTEGER offset = { };
 	SetFilePointerEx (file_handle, offset, NULL, FILE_BEGIN);
 	SetEndOfFile (file_handle);
 }
 
-static bool platform_write_file (HANDLE file_handle, const char* text, int size, write_mode mode = WM_OVERWRITE) {
+WRITE_FILE (platform_write_file) {
 	 if (mode == WM_OVERWRITE)
 		 platform_clear_file (file_handle);
 
@@ -68,7 +66,7 @@ static bool platform_write_file (HANDLE file_handle, const char* text, int size,
 	return success;
 }
 
-static bool platform_read_file (HANDLE file_handle, char** text, unsigned* size) {
+READ_FILE (platform_read_file) {
 	DWORD file_size	= GetFileSize (file_handle, NULL);
 	*text = (char*)calloc (file_size + 1, sizeof (char));
 
@@ -82,7 +80,7 @@ static bool platform_read_file (HANDLE file_handle, char** text, unsigned* size)
 	return success;
 }
 
-static void platform_log (bool new_line, const char* format, ...) {
+LOG (platform_log) {
 	char message[2048];
 	int bytes_written = 0;
 
@@ -100,7 +98,7 @@ static void platform_log (bool new_line, const char* format, ...) {
 	va_end (arguments);
 }
 
-static void platform_copy_to_clipboard (const char* text) {
+COPY_TO_CLIPBOARD (platform_copy_to_clipboard) {
 	int size = string_length (text) + 1;
 
 	HANDLE clipboard_memory_handle = GlobalAlloc (GMEM_MOVEABLE, size);
@@ -118,21 +116,21 @@ static void platform_copy_to_clipboard (const char* text) {
 	CloseClipboard ();
 }
 
-static void platform_close_application () {
+CLOSE_APP (platform_close_application) {
 	global_running = false;
 }
 
-static void platform_minimize_application () {
+MINIMIZE_APP (platform_minimize_application) {
 	HWND window = GetActiveWindow ();
 	ShowWindow (window, SW_MINIMIZE);
 }
 
-static void platform_move_window (vector2 new_position) {
+MOVE_WINDOW (platform_move_window) {
 	HWND window = GetActiveWindow ();
 	SetWindowPos (window, 0, new_position.x, new_position.y, 0, 0, SWP_NOZORDER | SWP_NOSIZE);
 }
 
-static void platform_get_window_position (vector2* result) {
+GET_WINDOW_POSITION (platform_get_window_position) {
 	HWND window = GetActiveWindow ();
 	RECT client_rect;
 	GetWindowRect (window, &client_rect);

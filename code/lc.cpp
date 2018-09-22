@@ -75,14 +75,14 @@
 
 #define BUFFER_SIZE 4096
 
-#define SLIDER_ARROW_LEFT_PATH "W:\\color\\data\\images\\slider_arrow_left.png"
-#define SLIDER_ARROW_RIGHT_PATH "W:\\color\\data\\images\\slider_arrow_right.png"
-#define SWATCH_ARROW_TOP "W:\\color\\data\\images\\swatch_arrow_top.png"
-#define SWATCH_ARROW_BOTTOM "W:\\color\\data\\images\\swatch_arrow_bottom.png"
-#define CLOSE_ICON "W:\\color\\data\\images\\close_icon.png"
-#define MINIMIZE_ICON "W:\\color\\data\\images\\minimize_icon.png"
+#define SLIDER_ARROW_LEFT_PATH "..\\data\\images\\slider_arrow_left.png"
+#define SLIDER_ARROW_RIGHT_PATH "..\\data\\images\\slider_arrow_right.png"
+#define SAMPLE_ARROW_TOP "..\\data\\images\\sample_arrow_top.png"
+#define SAMPLE_ARROW_BOTTOM "..\\data\\images\\sample_arrow_bottom.png"
+#define CLOSE_ICON "..\\data\\images\\close_icon.png"
+#define MINIMIZE_ICON "..\\data\\images\\minimize_icon.png"
 
-#define MAIN_FONT "W:\\color\\data\\fonts\\consola.ttf"
+#define MAIN_FONT "..\\data\\fonts\\consola.ttf"
 
 #define TITLE "Laser Color"
 
@@ -129,6 +129,8 @@ static void copy_color_to_clipboard (lc_app* app, const char* format, lc_color c
 		sprintf_s (buffer, buffer_size, format, color.r, color.g, color.b);
 
 	app -> platform.copy_to_clipboard (buffer);
+
+	free (buffer);
 }
 
 static void change_color_component_value (float* component, float amount, change_direction direction) {
@@ -140,14 +142,14 @@ static void toggle_color_component (float* component) {
 								  (*component >= 0.5f) ? D_DECREASE :  D_INCREASE);
 }
 
-static void change_color_swatch (lc_app* app, change_direction direction, bool switch_to_newly_added_swatch = false) {
+static void change_color_swatch (lc_app* app, change_direction direction, bool switch_to_new = false) {
 	if (app -> color_samples.count == 0) {
 		app -> current_sample_index = -1;
 		app -> current_screen_sample_index = -1;
 		return;
 	}
 
-	if (switch_to_newly_added_swatch) {
+	if (switch_to_new) {
 		app -> current_sample_index = app -> color_samples.count - 1;
 		app -> previous_color = app -> current_color;
 		app -> current_screen_sample_index = app -> current_sample_index;
@@ -232,7 +234,7 @@ static void save_color_library (lc_app* app) {
 	if (app -> platform.write_file (app -> color_library_file.handle, buffer, bytes_written, WM_OVERWRITE))
 		app -> platform.log (true, " Success. Saved at %s.", app -> color_library_file.path);
 	else
-		app -> platform.log ("Could not write into %s.", app -> color_library_file.path);
+		app -> platform.log (" Could not write into %s.", app -> color_library_file.path);
 }
 
 static void load_color_library (lc_app* app) {
@@ -498,7 +500,7 @@ void app_init (lc_memory* memory, platform_api platform, vector2 client_size, ch
 		app -> platform.log (true, " Success.");
 	}
 	else
-		app -> platform.log (true, "Could not open the color library file.");
+		app -> platform.log (true, " Could not open the color library file.");
 
 	if (app -> color_samples.count > 0) {
 		app -> current_sample_index = 0;
@@ -515,7 +517,7 @@ void app_init (lc_memory* memory, platform_api platform, vector2 client_size, ch
 	app -> current_screen_sample_index = app -> current_sample_index;
 
 	// Load images used for UI
-	char image_paths[UI_COUNT][PATH_MAX] = { SLIDER_ARROW_LEFT_PATH, SLIDER_ARROW_RIGHT_PATH, SWATCH_ARROW_TOP, SWATCH_ARROW_BOTTOM, CLOSE_ICON, MINIMIZE_ICON };
+	char image_paths[UI_COUNT][PATH_MAX] = { SLIDER_ARROW_LEFT_PATH, SLIDER_ARROW_RIGHT_PATH, SAMPLE_ARROW_TOP, SAMPLE_ARROW_BOTTOM, CLOSE_ICON, MINIMIZE_ICON };
 	for (int i = 0; i < UI_COUNT; ++i) {
 		int n;
 		app -> platform.log (false, "Loading %s...", image_paths[i]);
@@ -650,8 +652,8 @@ void app_update (lc_memory* memory, double delta_time, lc_input input) {
 	status_bar_rect.y = STATUS_BAR_HEIGHT;
 	opengl_rect (status_bar_rect, status_bar_color);
 
-	char samples_count_text[15];
-	sprintf_s (samples_count_text, "Samples: %d/%d\0", 
+	char samples_count_text[14];
+	sprintf_s (samples_count_text, "Sample: %d/%d\0", 
 			   app -> current_sample_index + 1, app -> color_samples.count);
 	lc_color samples_color = app -> color_library_is_dirty ? make_colorb (DIRTY_COLOR) : make_colorb (SLIDER_TEXT_COLOR);
 	lc_rect samples_count_rect = status_bar_rect;
