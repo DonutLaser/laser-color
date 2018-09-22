@@ -492,7 +492,7 @@ void app_init (lc_memory* memory, platform_api platform, vector2 client_size, ch
 	app -> color_samples = { };
 
 	app -> color_library_file.path = (char*)malloc (sizeof (char) * PATH_MAX);
-	sprintf_s (app -> color_library_file.path, PATH_MAX, "%s/%s", documents, "test_color_library.lclib");
+	sprintf_s (app -> color_library_file.path, PATH_MAX, "%s/%s", documents, "my_colors.lclib");
 	app -> color_library_file.handle = app -> platform.open_file (app -> color_library_file.path);
 
 	if (app -> color_library_file.handle) {
@@ -509,11 +509,11 @@ void app_init (lc_memory* memory, platform_api platform, vector2 client_size, ch
 		app -> current_color = app -> color_samples.samples[app -> current_sample_index];
 	}
 	else {
-		app -> current_sample_index = 0;
-		app -> current_color = app -> previous_color;
+		app -> current_sample_index = -1;
+		app -> current_color = make_colorb (DEFAULT_COLOR);
 	}
 	
-	app -> previous_color = make_colorb (DEFAULT_COLOR);
+	app -> previous_color = app -> current_color;
 
 	app -> current_sample_index = app -> color_samples.count > 0 ? 0 : -1;
 	app -> current_screen_sample_index = app -> current_sample_index;
