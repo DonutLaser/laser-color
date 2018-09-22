@@ -197,11 +197,13 @@ static void make_selected_swatch_current_color (lc_app* app) {
 	app -> current_color = app -> color_samples.samples[app -> current_sample_index];
 }
 
-static bool add_color_to_color_library (lc_app* app, lc_color color) {
+static bool add_color_to_library (lc_app* app, lc_color color, bool no_move = false) {
 	if (app -> color_samples.count < MAX_COLORS_IN_LIBRARY) {
 		app -> color_samples.samples[app -> color_samples.count++] = color;
 
-		change_color_swatch (app, D_INCREASE, true);
+		if (!no_move)
+			change_color_swatch (app, D_INCREASE, true);
+
 		return true;
 	}
 
@@ -258,8 +260,7 @@ static void load_color_library (lc_app* app) {
 				byte value = string_to_byte (component);
 				rgb[current_component] = value;
 
-				add_color_to_color_library (app, 
-											make_colorb (rgb[0], rgb[1], rgb[2]));
+				add_color_to_library (app, make_colorb (rgb[0], rgb[1], rgb[2]), true);
 
 				current_char = 0;
 				current_component = 0;
@@ -287,7 +288,7 @@ static void handle_input (lc_app* app, lc_input input) {
 			break;
 		}
 		case KEY_I: {
-			if (add_color_to_color_library (app, app -> current_color))
+			if (add_color_to_library (app, app -> current_color))
 				app -> color_library_is_dirty = true;
 			else {
 				app -> platform.log (true, "New color could not be added to the library. Library is full.");
