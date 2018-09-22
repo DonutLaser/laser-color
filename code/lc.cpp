@@ -6,14 +6,10 @@
 #include "lc_platform.h"
 #include "lc_memory.h"
 #include "lc_opengl.h"
-#include "lc_gui_layout.h"
 #include "lc_status.h"
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "../third_party/stb_image.h"
-// #define STB_IMAGE_WRITE_IMPLEMENTATION
-// #define STBI_MSC_SECURE_CRT
-// #include "../third_party/stb_image_write.h"
 
 #define clamp_value(x, min, max) (x < min) ? min : ((x > max) ? max : x)
 #define abs_value(x) (x < 0) ? (-x) : (x)
@@ -671,16 +667,6 @@ void app_update (lc_memory* memory, double delta_time, lc_input input) {
 
 		status_update (&app -> status_bar, delta_time);
 	}
-	// if (app -> color_library_is_dirty) {
-	// 	lc_color dirty_color = make_colorb (DIRTY_COLOR);
-	// 	lc_rect dirty_rect = { };
-	// 	dirty_rect.width = SWATCH_WIDTH / 3;
-	// 	dirty_rect.height = SWATCH_HEIGHT + (OUTLINE_WIDTH * 2);
-	// 	dirty_rect.x = 0;
-	// 	dirty_rect.y = SWATCH_AREA_HEIGHT - ((SWATCH_AREA_HEIGHT - SWATCH_HEIGHT) / 2) + OUTLINE_WIDTH;
-
-	// 	opengl_rect (dirty_rect, dirty_color);
-	// }
 }
 
 void app_close (lc_memory* memory) {
