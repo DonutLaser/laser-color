@@ -9,7 +9,7 @@ You can choose colors, copy them in three different formats into the clipboard a
 ## Controls
 The application has __no mouse controls__ except for the close and minimize buttons on the title bar. This is so that
 you wouldn't have to move your hand away from the keyboard keys which makes you work slower.
-Knowledge and being comfortable with vim keybindings can be helpful when using this application.
+Keybindings were inspired by vim keybindings therefore knowledge and being comfortable with vim keybindings can be helpful when using this application.
 
 ##### Keybindings:
 * __J__ - move to the next color component (e.g., from R to G or from G to B)
