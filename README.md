@@ -29,3 +29,8 @@ Keybindings were inspired by vim keybindings therefore knowledge and being comfo
 * __H__ - select previous color sample
 * __L__ - select next color sample
 * __Ctrl + S__ - save the library
+
+## Installation
+
+To install the app, simply go to Releases page of the repository and download the LaserColor.exe installer.
+In the installer, follow instructions as you would in any other installer. That's it.
